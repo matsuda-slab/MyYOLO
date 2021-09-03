@@ -1,0 +1,5 @@
+result.png
+*.model
+images
+__pycache__/
+output.jpg

@@ -1,0 +1,7 @@
+tqdm
+opencv-python
+imgaug
+Pillow
+
+# must download and build
+### pycocotools
