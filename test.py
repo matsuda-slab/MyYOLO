@@ -1,3 +1,4 @@
+from utils.datasets import _create_validation_data_loader
 import os
 import sys
 import argparse
@@ -11,12 +12,15 @@ import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
 from model import YOLO
-from utils import non_max_suppression
+from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
 
 NUM_CLASSES = 80
+BATCH_SIZE  = 8
+DATA_ROOT   = '/home/matsuda/datasets/COCO'
+VALID_PATH  = DATA_ROOT + '/2014/5k.txt'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--weights', default='tiny-yolo.model')
+parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--conf_thres', default=0.5)
 parser.add_argument('--nms_thres', default=0.4)
 args = parser.parse_args()
@@ -39,13 +43,44 @@ model.load_state_dict(torch.load(weights_path, map_location=device))
 model.to(device)
 
 # valid用のデータローダを作成する
+dataloader = _create_validation_data_loader(
+        VALID_PATH,
+        BATCH_SIZE,
+        416
+        )
 
 # 推論実行
+model = YOLO()
+model.load_state_dict(torch.load(weights_path, map_location=device))
+model.to(device)
+model.eval()
 
-# nmsをかける
+labels         = []
+sample_metrics = []
+for _, images, targets in dataloader:
+    # ラベル(番号)をリスト化している (あとで必要なのだろう)
+    labels += targets[:, 1].tolist()
+
+    # w, h を x, y に直すのは, あとの関数で必要なのだろう
+    targets[:, 2:] = xywh2xyxy(targets[:, 2:])
+    targets[:, 2:] *= img_size
+
+    with torch.no_grad():
+        outputs = model(images)
+    # nmsをかける
+        outputs = non_max_suppression(outputs, conf_thres=conf_thres, nms_thres=nms_thres)
 
 # スコア(precision, recall, TPなど)を算出する
+    sample_metrics += get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
 
 # クラスごとの AP を算出する
+TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
 # mAP を算出する
+precision, recall, AP, f1, ap_class = metrics_output
+for i, c in enumerate(ap_class):
+    ap_table += [[c, class_names[c], "%.5f" % AP[i]]]
+
+mAP = AP.mean() 
+print("mAP :", mAP)

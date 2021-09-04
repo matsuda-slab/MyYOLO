@@ -5,7 +5,7 @@ import numpy as np
 import imgaug.augmenters as iaa
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 
-from utils import xywh2xyxy_np
+from utils.utils import xywh2xyxy_np
 import torchvision.transforms as transforms
 
 
