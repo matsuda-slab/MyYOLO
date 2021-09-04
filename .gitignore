@@ -1,5 +1,5 @@
 result.png
-*.model
+weights/*
 images
 __pycache__/
 output.jpg

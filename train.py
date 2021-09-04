@@ -1,10 +1,10 @@
-from datasets import _create_data_loader
+from utils.datasets import _create_data_loader
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from loss import compute_loss
-from utils import plot_graph
+from utils.loss import compute_loss
+from utils.utils import plot_graph
 from model import YOLO
 import time
 

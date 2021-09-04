@@ -1,17 +1,19 @@
 import os
 import sys
 import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
-from model import YOLO
 from PIL import Image
-import numpy as np
-from utils import non_max_suppression
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import random
+from model import YOLO
+from utils.utils import non_max_suppression
+
+NUM_CLASSES = 80
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='tiny-yolo.model')
@@ -86,8 +88,8 @@ ax.imshow(input_image)
 
 ### クラスによって描く色を決める
 cmap = plt.get_cmap('tab20b')       # tab20b はカラーマップの種類の1つ
-colors = [cmap(i) for i in np.linspace(0, 1, 80)]  # cmap をリスト化 (80分割)
-bbox_colors = random.sample(colors, 80)     # カラーをランダムに並び替え (任意)
+colors = [cmap(i) for i in np.linspace(0, 1, NUM_CLASSES)]  # cmap をリスト化 (80分割)
+bbox_colors = random.sample(colors, NUM_CLASSES)     # カラーをランダムに並び替え (任意)
 
 ### 推論結果(x_min, y_min, x_max, y_max, confidence, class) をもとに
 ### 描画する矩形とラベルを作成する
