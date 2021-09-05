@@ -16,18 +16,21 @@ from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap
 
 NUM_CLASSES = 80
 BATCH_SIZE  = 8
-DATA_ROOT   = '/home/matsuda/datasets/COCO'
-VALID_PATH  = DATA_ROOT + '/2014/5k.txt'
+IMG_SIZE    = 416
+DATA_ROOT   = '/home/users/matsuda/work/NN/yolov3/eriklindernoren/PyTorch-YOLOv3/data/coco/'
+VALID_PATH  = DATA_ROOT + '/5k.txt'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
-parser.add_argument('--conf_thres', default=0.5)
+parser.add_argument('--conf_thres', default=0.01)
 parser.add_argument('--nms_thres', default=0.4)
+parser.add_argument('--iou_thres', default=0.5)
 args = parser.parse_args()
 
 weights_path = args.weights
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
+iou_thres    = args.iou_thres
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -46,7 +49,7 @@ model.to(device)
 dataloader = _create_validation_data_loader(
         VALID_PATH,
         BATCH_SIZE,
-        416
+        IMG_SIZE
         )
 
 # 推論実行
@@ -61,17 +64,19 @@ for _, images, targets in dataloader:
     # ラベル(番号)をリスト化している (あとで必要なのだろう)
     labels += targets[:, 1].tolist()
 
+    images = images.type(tensor_type)
+
     # w, h を x, y に直すのは, あとの関数で必要なのだろう
     targets[:, 2:] = xywh2xyxy(targets[:, 2:])
-    targets[:, 2:] *= img_size
+    targets[:, 2:] *= IMG_SIZE
 
     with torch.no_grad():
         outputs = model(images)
     # nmsをかける
-        outputs = non_max_suppression(outputs, conf_thres=conf_thres, nms_thres=nms_thres)
+        outputs = non_max_suppression(outputs, conf_thres, nms_thres)
 
 # スコア(precision, recall, TPなど)を算出する
-    sample_metrics += get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
+    sample_metrics += get_batch_statistics(outputs, targets, iou_thres)
 
 # クラスごとの AP を算出する
 TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
