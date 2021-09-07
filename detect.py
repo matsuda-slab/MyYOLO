@@ -16,9 +16,9 @@ from utils.utils import non_max_suppression
 NUM_CLASSES = 80
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--weights', default='tiny-yolo.model')
+parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--image', default='images/dog.jpg')
-parser.add_argument('--conf_thres', default=0.01)
+parser.add_argument('--conf_thres', default=0.5)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
 args = parser.parse_args()
@@ -60,6 +60,7 @@ output = model(image)       # 出力座標は 0~1 の値
 output = non_max_suppression(output, conf_thres, nms_thres)
 
 output = output[0]
+print("output.shape :", output.shape)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[:2]

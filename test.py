@@ -17,7 +17,7 @@ from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap
 NUM_CLASSES = 80
 BATCH_SIZE  = 8
 IMG_SIZE    = 416
-DATA_ROOT   = '/home/users/matsuda/work/NN/yolov3/eriklindernoren/PyTorch-YOLOv3/data/coco/'
+DATA_ROOT   = '/home/matsuda/datasets/COCO/2014/'
 VALID_PATH  = DATA_ROOT + '/5k.txt'
 
 parser = argparse.ArgumentParser()

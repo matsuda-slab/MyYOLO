@@ -8,13 +8,15 @@ from utils.utils import plot_graph
 from model import YOLO
 import time
 
-BATCH_SIZE = 64
-EPOCHS     = 2
-DATA_ROOT  = '/home/matsuda/datasets/COCO'
-LR         = 0.0001
-DECAY      = 0.0005
-
-TRAIN_PATH = DATA_ROOT + '/2014/trainvalno5k.txt'
+BATCH_SIZE  = 64
+EPOCHS      = 100
+LR          = 0.0001
+DECAY       = 0.0005
+SUBDIVISION = 2
+BURN_IN     = 1000
+DATA_ROOT   = '/home/matsuda/datasets/COCO'
+TRAIN_PATH  = DATA_ROOT + '/2014/trainvalno5k.txt'
+lr_steps    = [[400000, 0.1], [450000, 0.1]]
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -53,6 +55,8 @@ start = time.ctime()
 start_cnv = time.strptime(start)
 for epoch in range(EPOCHS):
     for ite, (_, image, target) in enumerate(dataloader):
+        batches_done = len(dataloader) * epoch + ite
+
         image = image.to(device)
         target = target.to(device)
         # forward
@@ -63,11 +67,26 @@ for epoch in range(EPOCHS):
         print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
 
         # backward
-        optimizer.zero_grad()
         loss.backward()
 
-        # optimizer を動作させる
-        optimizer.step()
+        ## 学習率の調整 及び optimizerの実行
+        if batches_done % SUBDIVISION == 0:         # SUBDIVISION = 2なら, 2回に1回学習率が変わる
+            lr = LR
+            if batches_done < BURN_IN:
+                lr *= (batches_done / BURN_IN)
+            else:
+                for threshold, value in lr_steps:
+                    if batches_done > threshold:
+                        lr *= value
+
+            for g in optimizer.param_groups:
+                g['lr'] = lr
+
+            # optimizer を動作させる
+            optimizer.step()
+
+            optimizer.zero_grad()
+
 
     losses.append(loss.item())
 
@@ -78,7 +97,7 @@ print("Start date >", time.strftime("%Y/%m/%d %H:%M:%S", start_cnv))
 print("End date >", time.strftime("%Y/%m/%d %H:%M:%S", end_cnv))
 
 # 学習結果(重みパラメータ)の保存
-torch.save(model.state_dict(), "tiny-yolo_2epoch.model")
+torch.save(model.state_dict(), "tiny-yolo.model")
 
 # lossグラフの作成
 plot_graph(losses, EPOCHS)
