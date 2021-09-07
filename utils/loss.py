@@ -8,7 +8,7 @@ import math
 import torch
 import torch.nn as nn
 
-from utils import to_cpu
+from utils.utils import to_cpu
 from itertools import chain
 
 # This new loss function is based on https://github.com/ultralytics/yolov3/blob/master/utils/loss.py
