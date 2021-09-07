@@ -84,6 +84,7 @@ metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
 # mAP を算出する
 precision, recall, AP, f1, ap_class = metrics_output
+ap_table = [['Index', 'Class', 'AP']]
 for i, c in enumerate(ap_class):
     ap_table += [[c, class_names[c], "%.5f" % AP[i]]]
 
