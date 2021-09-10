@@ -1,7 +1,7 @@
+torch==1.5.0
+torchvision==0.6.0
 tqdm
-opencv-python
 imgaug
-Pillow
 
 # must download and build
 ### pycocotools
