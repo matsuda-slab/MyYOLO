@@ -1,3 +1,4 @@
+import torch
 from utils.datasets import _create_validation_data_loader
 import os
 import sys
@@ -6,18 +7,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
-from model import YOLO
+from model import YOLO, load_model
 from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
 
 NUM_CLASSES = 80
 BATCH_SIZE  = 8
 IMG_SIZE    = 416
-DATA_ROOT   = '/home/matsuda/datasets/COCO/2014/'
+#DATA_ROOT   = '/home/users/matsuda/work/Datasets/COCO/2014'
+DATA_ROOT   = '/home/users/matsuda/work/NN/yolov3/eriklindernoren/PyTorch-YOLOv3/data/coco/'
 VALID_PATH  = DATA_ROOT + '/5k.txt'
 
 parser = argparse.ArgumentParser()
@@ -41,9 +42,10 @@ with open('coco.names', 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = YOLO()
-model.load_state_dict(torch.load(weights_path, map_location=device))
-model.to(device)
+#model = YOLO()
+#model.load_state_dict(torch.load(weights_path, map_location=device))
+#model.to(device)
+model = load_model(weights_path, device)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(
@@ -53,9 +55,6 @@ dataloader = _create_validation_data_loader(
         )
 
 # 推論実行
-model = YOLO()
-model.load_state_dict(torch.load(weights_path, map_location=device))
-model.to(device)
 model.eval()
 
 labels         = []
@@ -84,8 +83,11 @@ metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
 # mAP を算出する
 precision, recall, AP, f1, ap_class = metrics_output
+ap_table = [['Index', 'Class', 'AP']]
 for i, c in enumerate(ap_class):
     ap_table += [[c, class_names[c], "%.5f" % AP[i]]]
+for ap in ap_table:
+    print(ap)
 
 mAP = AP.mean() 
 print("mAP :", mAP)
