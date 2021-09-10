@@ -1,22 +1,32 @@
-from utils.datasets import _create_data_loader
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from utils.datasets import _create_data_loader
 from torch.utils.data import DataLoader
 from utils.loss import compute_loss
 from utils.utils import plot_graph
-from model import YOLO
+from model import YOLO, load_model
 import time
+import argparse
 
-BATCH_SIZE  = 64
-EPOCHS      = 100
-LR          = 0.0001
-DECAY       = 0.0005
-SUBDIVISION = 2
-BURN_IN     = 1000
-DATA_ROOT   = '/home/matsuda/datasets/COCO'
-TRAIN_PATH  = DATA_ROOT + '/2014/trainvalno5k.txt'
-lr_steps    = [[400000, 0.1], [450000, 0.1]]
+parser = argparse.ArgumentParser()
+parser.add_argument('--weights')
+parser.add_argument('--batch_size', default=64)
+parser.add_argument('--epochs', default=100)
+parser.add_argument('--lr', default=0.0001)
+parser.add_argument('--data_root', default='/home/users/matsuda/work/NN/yolov3/eriklindernoren/PyTorch-YOLOv3/data/coco/')
+args = parser.parse_args()
+
+DATA_ROOT    = args.data_root
+BATCH_SIZE   = args.batch_size
+EPOCHS       = args.epochs
+LR           = args.lr
+TRAIN_PATH   = DATA_ROOT + '/trainvalno5k.txt'
+DECAY        = 0.0005
+SUBDIVISION  = 2
+BURN_IN      = 1000
+lr_steps     = [[400000, 0.1], [450000, 0.1]]
+weights_path = args.weights
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -39,7 +49,8 @@ dataloader = _create_data_loader(
 #     args.n_cpu)
 
 # モデルの生成
-model = YOLO().to(device)
+# model = YOLO().to(device)
+model = load_model(weights_path, device)
 
 # 最適化アルゴリズム, 損失関数の定義
 optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
@@ -64,7 +75,6 @@ for epoch in range(EPOCHS):
 
         # 損失の計算
         loss, _ = compute_loss(outputs, target, model)
-        print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
 
         # backward
         loss.backward()
@@ -86,6 +96,10 @@ for epoch in range(EPOCHS):
             optimizer.step()
 
             optimizer.zero_grad()
+
+        if batches_done % 10 == 0:
+            print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
+
 
 
     losses.append(loss.item())

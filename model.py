@@ -21,10 +21,10 @@ class YOLO(nn.Module):
         self.conv7    = nn.Conv2d( 512, 1024, kernel_size=3, stride=1, padding=1, bias=0)
         self.conv8    = nn.Conv2d(1024,  256, kernel_size=1, stride=1, padding=0, bias=0)
         self.conv9    = nn.Conv2d( 256,  512, kernel_size=3, stride=1, padding=1, bias=0)
-        self.conv10   = nn.Conv2d( 512,  255, kernel_size=1, stride=1, padding=0, bias=0)
+        self.conv10   = nn.Conv2d( 512,  255, kernel_size=1, stride=1, padding=0, bias=1)
         self.conv11   = nn.Conv2d( 256,  128, kernel_size=1, stride=1, padding=0, bias=0)
         self.conv12   = nn.Conv2d( 384,  256, kernel_size=3, stride=1, padding=1, bias=0)
-        self.conv13   = nn.Conv2d( 256,  255, kernel_size=1, stride=1, padding=0, bias=0)
+        self.conv13   = nn.Conv2d( 256,  255, kernel_size=1, stride=1, padding=0, bias=1)
         self.pool1    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool2    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool3    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -51,6 +51,81 @@ class YOLO(nn.Module):
         self.yolo_layers = [self.yolo1, self.yolo2]
 
         # hyperparams
+
+    def set_bn_params(self, layer, params, ptr):
+        # bias
+        num_b = layer.bias.numel()
+        bn_b  = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
+        layer.bias.data.copy_(bn_b)
+        ptr  += num_b
+
+        # weight
+        num_w = layer.weight.numel()
+        bn_w  = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
+        layer.weight.data.copy_(bn_w)
+        ptr  += num_w
+
+        # running mean
+        num_rm = layer.running_mean.numel()
+        bn_rm  = torch.from_numpy(params[ptr : ptr + num_rm]).view_as(layer.running_mean)
+        layer.running_mean.copy_(bn_rm)
+        ptr   += num_rm
+
+        # running var
+        num_rv = layer.running_var.numel()
+        bn_rv  = torch.from_numpy(params[ptr : ptr + num_rv]).view_as(layer.running_var)
+        layer.running_var.copy_(bn_rv)
+        ptr   += num_rv
+
+    def set_conv_weights(self, layer, params, ptr):
+        num_w  = layer.weight.numel()
+        conv_w = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
+        layer.weight.data.copy_(conv_w)
+        ptr   += num_w
+
+    def set_conv_biases(self, layer, params, ptr):
+        num_b  = layer.bias.numel()
+        conv_b = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
+        layer.bias.data.copy_(conv_b)
+        ptr   += num_b
+
+    def load_weights(self, weights_path):
+        # バイナリファイルを読み込み, 配列にデータを格納
+        with open(weights_path, "rb") as f:
+            weights = np.fromfile(f, dtype=np.float32)
+
+        ptr = 0
+
+        self.set_bn_params(self.bn1, weights, ptr)
+        self.set_conv_weights(self.conv1, weights, ptr)
+        self.set_bn_params(self.bn2, weights, ptr)
+        self.set_conv_weights(self.conv2, weights, ptr)
+        self.set_bn_params(self.bn3, weights, ptr)
+        self.set_conv_weights(self.conv3, weights, ptr)
+        self.set_bn_params(self.bn4, weights, ptr)
+        self.set_conv_weights(self.conv4, weights, ptr)
+        self.set_bn_params(self.bn5, weights, ptr)
+        self.set_conv_weights(self.conv5, weights, ptr)
+        self.set_bn_params(self.bn6, weights, ptr)
+        self.set_conv_weights(self.conv6, weights, ptr)
+
+        self.set_bn_params(self.bn7, weights, ptr)
+        self.set_conv_weights(self.conv7, weights, ptr)
+        self.set_bn_params(self.bn8, weights, ptr)
+        self.set_conv_weights(self.conv8, weights, ptr)
+        self.set_bn_params(self.bn9, weights, ptr)
+        self.set_conv_weights(self.conv9, weights, ptr)
+
+        self.set_conv_biases(self.conv10, weights, ptr)
+        self.set_conv_weights(self.conv10, weights, ptr)
+
+        self.set_bn_params(self.bn10, weights, ptr)
+        self.set_conv_weights(self.conv11, weights, ptr)
+        self.set_bn_params(self.bn11, weights, ptr)
+        self.set_conv_weights(self.conv12, weights, ptr)
+
+        self.set_conv_biases(self.conv13, weights, ptr)
+        self.set_conv_weights(self.conv13, weights, ptr)
 
     def forward(self, x):
         yolo_outputs = []
@@ -146,3 +221,11 @@ class YOLOLayer(nn.Module):
 
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
+
+def load_model(weights_path, device):
+    model = YOLO().to(device)
+
+    if weights_path:
+        model.load_weights(weights_path)
+
+    return model

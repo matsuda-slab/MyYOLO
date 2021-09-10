@@ -10,14 +10,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
-from model import YOLO
+from model import YOLO, load_model
 from utils.utils import non_max_suppression
 
 NUM_CLASSES = 80
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
-parser.add_argument('--image', default='images/dog.jpg')
+parser.add_argument('--image', default='images/dog.png')
 parser.add_argument('--conf_thres', default=0.5)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
@@ -38,17 +38,19 @@ with open('coco.names', 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = YOLO()
-model.load_state_dict(torch.load(weights_path, map_location=device))
-model.to(device)
+# model = YOLO()
+# model.load_state_dict(torch.load(weights_path, map_location=device))
+# model.to(device)
+model = load_model(weights_path, device)
 
 # 画像パスから入力画像データに変換
 input_image = Image.open(image_path).convert('RGB')
+resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
+input_image = resizer(input_image)
 input_image = np.array(input_image, dtype=np.uint8)
 image       = torch.from_numpy(input_image).to(device)
 image       = image.permute(2, 0, 1)
-resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
-image       = resizer(image).unsqueeze(0)
+image       = image.unsqueeze(0)
 image       = image.type(tensor_type)
 
 # 入力画像からモデルによる推論を実行する
