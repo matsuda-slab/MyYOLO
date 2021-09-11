@@ -52,83 +52,10 @@ class YOLO(nn.Module):
 
         # hyperparams
 
-    def set_bn_params(self, layer, params, ptr):
-        # bias
-        num_b = layer.bias.numel()
-        bn_b  = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
-        layer.bias.data.copy_(bn_b)
-        ptr  += num_b
-
-        # weight
-        num_w = layer.weight.numel()
-        bn_w  = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
-        layer.weight.data.copy_(bn_w)
-        ptr  += num_w
-
-        # running mean
-        num_rm = layer.running_mean.numel()
-        bn_rm  = torch.from_numpy(params[ptr : ptr + num_rm]).view_as(layer.running_mean)
-        layer.running_mean.copy_(bn_rm)
-        ptr   += num_rm
-
-        # running var
-        num_rv = layer.running_var.numel()
-        bn_rv  = torch.from_numpy(params[ptr : ptr + num_rv]).view_as(layer.running_var)
-        layer.running_var.copy_(bn_rv)
-        ptr   += num_rv
-
-    def set_conv_weights(self, layer, params, ptr):
-        num_w  = layer.weight.numel()
-        conv_w = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
-        layer.weight.data.copy_(conv_w)
-        ptr   += num_w
-
-    def set_conv_biases(self, layer, params, ptr):
-        num_b  = layer.bias.numel()
-        conv_b = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
-        layer.bias.data.copy_(conv_b)
-        ptr   += num_b
-
     def load_weights(self, weights_path, device):
-        # バイナリファイルを読み込み, 配列にデータを格納
-        # with open(weights_path, "rb") as f:
-        #     weights = np.fromfile(f, dtype=np.float32)
-
-        # ptr = 0
-
-        # self.set_bn_params(self.bn1, weights, ptr)
-        # self.set_conv_weights(self.conv1, weights, ptr)
-        # self.set_bn_params(self.bn2, weights, ptr)
-        # self.set_conv_weights(self.conv2, weights, ptr)
-        # self.set_bn_params(self.bn3, weights, ptr)
-        # self.set_conv_weights(self.conv3, weights, ptr)
-        # self.set_bn_params(self.bn4, weights, ptr)
-        # self.set_conv_weights(self.conv4, weights, ptr)
-        # self.set_bn_params(self.bn5, weights, ptr)
-        # self.set_conv_weights(self.conv5, weights, ptr)
-        # self.set_bn_params(self.bn6, weights, ptr)
-        # self.set_conv_weights(self.conv6, weights, ptr)
-
-        # self.set_bn_params(self.bn7, weights, ptr)
-        # self.set_conv_weights(self.conv7, weights, ptr)
-        # self.set_bn_params(self.bn8, weights, ptr)
-        # self.set_conv_weights(self.conv8, weights, ptr)
-        # self.set_bn_params(self.bn9, weights, ptr)
-        # self.set_conv_weights(self.conv9, weights, ptr)
-
-        # self.set_conv_biases(self.conv10, weights, ptr)
-        # self.set_conv_weights(self.conv10, weights, ptr)
-
-        # self.set_bn_params(self.bn10, weights, ptr)
-        # self.set_conv_weights(self.conv11, weights, ptr)
-        # self.set_bn_params(self.bn11, weights, ptr)
-        # self.set_conv_weights(self.conv12, weights, ptr)
-
-        # self.set_conv_biases(self.conv13, weights, ptr)
-        # self.set_conv_weights(self.conv13, weights, ptr)
-
         ckpt = torch.load(weights_path, map_location=device)
         param = ckpt['model']
+
         self.conv1.weight     = nn.Parameter(param['module_list.0.Conv2d.weight'])
         self.bn1.weight       = nn.Parameter(param['module_list.0.BatchNorm2d.weight'])
         self.bn1.bias         = nn.Parameter(param['module_list.0.BatchNorm2d.bias'])
