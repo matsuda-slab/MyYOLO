@@ -14,31 +14,33 @@ from PIL import Image
 from model import YOLO, load_model
 from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
 
-NUM_CLASSES = 80
-BATCH_SIZE  = 8
-IMG_SIZE    = 416
-#DATA_ROOT   = '/home/users/matsuda/work/Datasets/COCO/2014'
-DATA_ROOT   = '/home/users/matsuda/work/NN/yolov3/eriklindernoren/PyTorch-YOLOv3/data/coco/'
-VALID_PATH  = DATA_ROOT + '/5k.txt'
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--conf_thres', default=0.01)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--iou_thres', default=0.5)
+parset.add_argument('--class_file', default='coco.names')
+parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 args = parser.parse_args()
+
+NUM_CLASSES  = 80
+BATCH_SIZE   = 8
+IMG_SIZE     = 416
+DATA_ROOT    = args.data_root
+VALID_PATH   = DATA_ROOT + '/5k.txt'
 
 weights_path = args.weights
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
 iou_thres    = args.iou_thres
+class_file   = args.class_file
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
-with open('coco.names', 'r') as f:
+with open(class_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む

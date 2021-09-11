@@ -43,3 +43,17 @@ batch_size * ((80+5) * 3)
 
 <損失の計算>
 6. クラス確率のloss (t0~t79) は, Binery Cross Entropy で算出
+
+
+[転移学習・ファインチューニング]
+* ultralytics の実装では, 学習済みパラメータ(yolov3-tiny.pt)が独自のモデルのもの
+  になっており, ckptのキーも独自のものなので, 学習時にこれに合わせないと
+  この学習済みパラメータを使ったファインチューニングがやりにくい.
+
+* eriklindernoren の実装は, 学習済みパラメータ(yolov3-tiny.weights)が
+  darknetのpjreddieのところから持ってきているやつなので, 公式のモデルと言える.
+  なので, これに合わせて, キーを決めるのが良さそう
+
+* ckpt のある層のパラメータ(tensor.Float型) を, 自作モデルのパラメータ
+  (nn.Parameter型) に代入したいときは, その tensor.Float型を nn.Parameter() で
+  囲むと良い.
