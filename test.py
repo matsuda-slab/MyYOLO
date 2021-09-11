@@ -19,7 +19,7 @@ parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--conf_thres', default=0.01)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--iou_thres', default=0.5)
-parset.add_argument('--class_file', default='coco.names')
+parser.add_argument('--class_file', default='coco.names')
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 args = parser.parse_args()
 

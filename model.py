@@ -132,57 +132,57 @@ class YOLO(nn.Module):
         self.conv1.weight     = nn.Parameter(param['module_list.0.Conv2d.weight'])
         self.bn1.weight       = nn.Parameter(param['module_list.0.BatchNorm2d.weight'])
         self.bn1.bias         = nn.Parameter(param['module_list.0.BatchNorm2d.bias'])
-        self.bn1.running_mean = nn.Parameter(param['module_list.0.BatchNorm2d.running_mean'])
-        self.bn1.running_var  = nn.Parameter(param['module_list.0.BatchNorm2d.running_var'])
+        self.bn1.running_mean = param['module_list.0.BatchNorm2d.running_mean']
+        self.bn1.running_var  = param['module_list.0.BatchNorm2d.running_var']
         self.bn1.num_batches_tracked = param['module_list.0.BatchNorm2d.num_batches_tracked']
         self.conv2.weight     = nn.Parameter(param['module_list.2.Conv2d.weight'])
         self.bn2.weight       = nn.Parameter(param['module_list.2.BatchNorm2d.weight'])
         self.bn2.bias         = nn.Parameter(param['module_list.2.BatchNorm2d.bias'])
-        self.bn2.running_mean = nn.Parameter(param['module_list.2.BatchNorm2d.running_mean'])
-        self.bn2.running_var  = nn.Parameter(param['module_list.2.BatchNorm2d.running_var'])
+        self.bn2.running_mean = param['module_list.2.BatchNorm2d.running_mean']
+        self.bn2.running_var  = param['module_list.2.BatchNorm2d.running_var']
         self.bn2.num_batches_tracked = param['module_list.2.BatchNorm2d.num_batches_tracked']
         self.conv3.weight     = nn.Parameter(param['module_list.4.Conv2d.weight'])
         self.bn3.weight       = nn.Parameter(param['module_list.4.BatchNorm2d.weight'])
         self.bn3.bias         = nn.Parameter(param['module_list.4.BatchNorm2d.bias'])
-        self.bn3.running_mean = nn.Parameter(param['module_list.4.BatchNorm2d.running_mean'])
-        self.bn3.running_var  = nn.Parameter(param['module_list.4.BatchNorm2d.running_var'])
+        self.bn3.running_mean = param['module_list.4.BatchNorm2d.running_mean']
+        self.bn3.running_var  = param['module_list.4.BatchNorm2d.running_var']
         self.bn3.num_batches_tracked = param['module_list.4.BatchNorm2d.num_batches_tracked']
         self.conv4.weight     = nn.Parameter(param['module_list.6.Conv2d.weight'])
         self.bn4.weight       = nn.Parameter(param['module_list.6.BatchNorm2d.weight'])
         self.bn4.bias         = nn.Parameter(param['module_list.6.BatchNorm2d.bias'])
-        self.bn4.running_mean = nn.Parameter(param['module_list.6.BatchNorm2d.running_mean'])
-        self.bn4.running_var  = nn.Parameter(param['module_list.6.BatchNorm2d.running_var'])
+        self.bn4.running_mean = param['module_list.6.BatchNorm2d.running_mean']
+        self.bn4.running_var  = param['module_list.6.BatchNorm2d.running_var']
         self.bn4.num_batches_tracked = param['module_list.6.BatchNorm2d.num_batches_tracked']
         self.conv5.weight     = nn.Parameter(param['module_list.8.Conv2d.weight'])
         self.bn5.weight       = nn.Parameter(param['module_list.8.BatchNorm2d.weight'])
         self.bn5.bias         = nn.Parameter(param['module_list.8.BatchNorm2d.bias'])
-        self.bn5.running_mean = nn.Parameter(param['module_list.8.BatchNorm2d.running_mean'])
-        self.bn5.running_var  = nn.Parameter(param['module_list.8.BatchNorm2d.running_var'])
+        self.bn5.running_mean = param['module_list.8.BatchNorm2d.running_mean']
+        self.bn5.running_var  = param['module_list.8.BatchNorm2d.running_var']
         self.bn5.num_batches_tracked = param['module_list.8.BatchNorm2d.num_batches_tracked']
         self.conv6.weight     = nn.Parameter(param['module_list.10.Conv2d.weight'])
         self.bn6.weight       = nn.Parameter(param['module_list.10.BatchNorm2d.weight'])
         self.bn6.bias         = nn.Parameter(param['module_list.10.BatchNorm2d.bias'])
-        self.bn6.running_mean = nn.Parameter(param['module_list.10.BatchNorm2d.running_mean'])
-        self.bn6.running_var  = nn.Parameter(param['module_list.10.BatchNorm2d.running_var'])
+        self.bn6.running_mean = param['module_list.10.BatchNorm2d.running_mean']
+        self.bn6.running_var  = param['module_list.10.BatchNorm2d.running_var']
         self.bn6.num_batches_tracked = param['module_list.10.BatchNorm2d.num_batches_tracked']
 
         self.conv7.weight     = nn.Parameter(param['module_list.12.Conv2d.weight'])
         self.bn7.weight       = nn.Parameter(param['module_list.12.BatchNorm2d.weight'])
         self.bn7.bias         = nn.Parameter(param['module_list.12.BatchNorm2d.bias'])
-        self.bn7.running_mean = nn.Parameter(param['module_list.12.BatchNorm2d.running_mean'])
-        self.bn7.running_var  = nn.Parameter(param['module_list.12.BatchNorm2d.running_var'])
+        self.bn7.running_mean = param['module_list.12.BatchNorm2d.running_mean']
+        self.bn7.running_var  = param['module_list.12.BatchNorm2d.running_var']
         self.bn7.num_batches_tracked = param['module_list.12.BatchNorm2d.num_batches_tracked']
         self.conv8.weight     = nn.Parameter(param['module_list.13.Conv2d.weight'])
         self.bn8.weight       = nn.Parameter(param['module_list.13.BatchNorm2d.weight'])
         self.bn8.bias         = nn.Parameter(param['module_list.13.BatchNorm2d.bias'])
-        self.bn8.running_mean = nn.Parameter(param['module_list.13.BatchNorm2d.running_mean'])
-        self.bn8.running_var  = nn.Parameter(param['module_list.13.BatchNorm2d.running_var'])
+        self.bn8.running_mean = param['module_list.13.BatchNorm2d.running_mean']
+        self.bn8.running_var  = param['module_list.13.BatchNorm2d.running_var']
         self.bn8.num_batches_tracked = param['module_list.13.BatchNorm2d.num_batches_tracked']
         self.conv9.weight     = nn.Parameter(param['module_list.14.Conv2d.weight'])
         self.bn9.weight       = nn.Parameter(param['module_list.14.BatchNorm2d.weight'])
         self.bn9.bias         = nn.Parameter(param['module_list.14.BatchNorm2d.bias'])
-        self.bn9.running_mean = nn.Parameter(param['module_list.14.BatchNorm2d.running_mean'])
-        self.bn9.running_var  = nn.Parameter(param['module_list.14.BatchNorm2d.running_var'])
+        self.bn9.running_mean = param['module_list.14.BatchNorm2d.running_mean']
+        self.bn9.running_var  = param['module_list.14.BatchNorm2d.running_var']
         self.bn9.num_batches_tracked = param['module_list.14.BatchNorm2d.num_batches_tracked']
 
         self.conv10.weight    = nn.Parameter(param['module_list.15.Conv2d.weight'])
@@ -191,14 +191,14 @@ class YOLO(nn.Module):
         self.conv11.weight     = nn.Parameter(param['module_list.18.Conv2d.weight'])
         self.bn10.weight       = nn.Parameter(param['module_list.18.BatchNorm2d.weight'])
         self.bn10.bias         = nn.Parameter(param['module_list.18.BatchNorm2d.bias'])
-        self.bn10.running_mean = nn.Parameter(param['module_list.18.BatchNorm2d.running_mean'])
-        self.bn10.running_var  = nn.Parameter(param['module_list.18.BatchNorm2d.running_var'])
+        self.bn10.running_mean = param['module_list.18.BatchNorm2d.running_mean']
+        self.bn10.running_var  = param['module_list.18.BatchNorm2d.running_var']
         self.bn10.num_batches_tracked = param['module_list.18.BatchNorm2d.num_batches_tracked']
         self.conv12.weight     = nn.Parameter(param['module_list.21.Conv2d.weight'])
         self.bn11.weight       = nn.Parameter(param['module_list.21.BatchNorm2d.weight'])
         self.bn11.bias         = nn.Parameter(param['module_list.21.BatchNorm2d.bias'])
-        self.bn11.running_mean = nn.Parameter(param['module_list.21.BatchNorm2d.running_mean'])
-        self.bn11.running_var  = nn.Parameter(param['module_list.21.BatchNorm2d.running_var'])
+        self.bn11.running_mean = param['module_list.21.BatchNorm2d.running_mean']
+        self.bn11.running_var  = param['module_list.21.BatchNorm2d.running_var']
         self.bn11.num_batches_tracked = param['module_list.21.BatchNorm2d.num_batches_tracked']
 
         self.conv13.weight    = nn.Parameter(param['module_list.22.Conv2d.weight'])
@@ -274,8 +274,8 @@ class YOLOLayer(nn.Module):
                         torch.arange(width, device=x.device)
             )
             # xy
-            x[..., 0] = x[..., 0].sigmoid() + grid_x
-            x[..., 1] = x[..., 1].sigmoid() + grid_y
+            x[..., 0] = (x[..., 0].sigmoid() + grid_x) * self.stride
+            x[..., 1] = (x[..., 1].sigmoid() + grid_y) * self.stride
 
             anchors = torch.tensor(self.anchors).float()
 

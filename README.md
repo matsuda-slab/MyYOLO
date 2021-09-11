@@ -29,6 +29,9 @@
   pjreddie の yolov3-tiny.weights を, ultralystic の yolov3 の
   convert (coremltools) を使って変換したもの
 
+* weightsのタイムスタンプが 9/10 より前のものは, convのbiasがないものなので,
+  現在のモデルには使えない.
+
 
 ## ハイパーパラメータ
 * (9/6) 学習率の学習時調整を導入. 調整方法は, ひとまずerikの実装と同じ
