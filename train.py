@@ -9,13 +9,15 @@ from utils.utils import plot_graph
 from model import YOLO, load_model
 import time
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
-parser.add_argument('--batch_size', default=64)
+parser.add_argument('--batch_size', default=32)
 parser.add_argument('--epochs', default=100)
 parser.add_argument('--lr', default=0.0001)
-parser.add_argument('--data_root', default='/home/users/matsuda/work/NN/yolov3/eriklindernoren/PyTorch-YOLOv3/data/coco/')
+parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
+parser.add_argument('--output_model', default='yolo-tiny.pt')
 args = parser.parse_args()
 
 DATA_ROOT    = args.data_root
@@ -28,6 +30,8 @@ SUBDIVISION  = 2
 BURN_IN      = 1000
 lr_steps     = [[400000, 0.1], [450000, 0.1]]
 weights_path = args.weights
+NUM_CLASSES  = 1
+IMG_SIZE     = 416
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -39,7 +43,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dataloader = _create_data_loader(
     TRAIN_PATH,
     BATCH_SIZE,
-    416
+    IMG_SIZE
     )
 
 # Load validation dataloader
@@ -50,8 +54,7 @@ dataloader = _create_data_loader(
 #     args.n_cpu)
 
 # モデルの生成
-# model = YOLO().to(device)
-model = load_model(weights_path, device)
+model = load_model(weights_path, device, NUM_CLASSES)
 
 # 最適化アルゴリズム, 損失関数の定義
 optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
@@ -102,7 +105,6 @@ for epoch in range(EPOCHS):
             print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
 
 
-
     losses.append(loss.item())
 
 end = time.ctime()
@@ -111,8 +113,26 @@ end_cnv = time.strptime(end)
 print("Start date >", time.strftime("%Y/%m/%d %H:%M:%S", start_cnv))
 print("End date >", time.strftime("%Y/%m/%d %H:%M:%S", end_cnv))
 
+# 学習結果のパラメータやログの保存場所の準備
+result_dir = time.strftime("%Y%m%d_%H%M%S", start_cnv)
+result_path = os.path.join('results', result_dir) 
+os.makedirs(result_path)
+
+train_params_file = os.path.join(result_path, 'train_params.txt')
+with open(train_params_file, 'w') as f:
+    f.write("epochs : " + str(EPOCHS) + "\n")
+    f.write("batch_size : " + str(BATCH_SIZE) + "\n")
+    f.write("pretrained_weights : " + str(args.weights) + "\n")
+    f.write("learning_late : " + str(LR) + "\n")
+    f.write("weight_decay : " + str(DECAY) + "\n")
+    f.write("subdivision : " + str(SUBDIVISION) + "\n")
+    f.write("burn_in : " + str(BURN_IN) + "\n")
+    f.write("train_data_list : " + str(TRAIN_PATH) + "\n")
+    f.write("num_classes : " + str(NUM_CLASSES) + "\n")
+    f.write("image_size : " + str(IMG_SIZE) + "\n")
+
 # 学習結果(重みパラメータ)の保存
-torch.save(model.state_dict(), "tiny-yolo.model")
+torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
 
 # lossグラフの作成
-plot_graph(losses, EPOCHS)
+plot_graph(losses, EPOCHS, result_path)

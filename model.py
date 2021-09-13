@@ -5,11 +5,12 @@ import numpy as np
 
 # YOLOv3-tiny
 class YOLO(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes):
         super(YOLO, self).__init__()
         self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
         self.img_size    = 416
-        self.num_classes = 80
+        self.num_classes = num_classes
+        self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
 
         # modules
         self.conv1    = nn.Conv2d(   3,   16, kernel_size=3, stride=1, padding=1, bias=0)
@@ -21,10 +22,10 @@ class YOLO(nn.Module):
         self.conv7    = nn.Conv2d( 512, 1024, kernel_size=3, stride=1, padding=1, bias=0)
         self.conv8    = nn.Conv2d(1024,  256, kernel_size=1, stride=1, padding=0, bias=0)
         self.conv9    = nn.Conv2d( 256,  512, kernel_size=3, stride=1, padding=1, bias=0)
-        self.conv10   = nn.Conv2d( 512,  255, kernel_size=1, stride=1, padding=0, bias=1)
+        self.conv10   = nn.Conv2d( 512, self.ylch, kernel_size=1, stride=1, padding=0, bias=1)
         self.conv11   = nn.Conv2d( 256,  128, kernel_size=1, stride=1, padding=0, bias=0)
         self.conv12   = nn.Conv2d( 384,  256, kernel_size=3, stride=1, padding=1, bias=0)
-        self.conv13   = nn.Conv2d( 256,  255, kernel_size=1, stride=1, padding=0, bias=1)
+        self.conv13   = nn.Conv2d( 256, self.ylch, kernel_size=1, stride=1, padding=0, bias=1)
         self.pool1    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool2    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool3    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -226,8 +227,8 @@ class YOLOLayer(nn.Module):
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
 
-def load_model(weights_path, device):
-    model = YOLO()
+def load_model(weights_path, device, num_classes=80):
+    model = YOLO(num_classes).to(device)
 
     if weights_path:
         model.load_weights(weights_path, device)

@@ -13,14 +13,14 @@ from PIL import Image
 from model import YOLO, load_model
 from utils.utils import non_max_suppression
 
-NUM_CLASSES = 80
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--image', default='images/dog.jpg')
 parser.add_argument('--conf_thres', default=0.5)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
+parser.add_argument('--num_classes', type=int, default=80)
+parser.add_argument('--class_names', default='coco.names')
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -28,20 +28,22 @@ image_path   = args.image
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
 output_path  = args.output_image
+NUM_CLASSES  = args.num_classes
+name_file    = args.class_names
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
-with open('coco.names', 'r') as f:
+with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-# model = YOLO()
-# model.load_state_dict(torch.load(weights_path, map_location=device))
-# model.to(device)
-model = load_model(weights_path, device)
+model = YOLO(num_classes=NUM_CLASSES)
+model.load_state_dict(torch.load(weights_path, map_location=device))
+model.to(device)
+# model = load_model(weights_path, device)
 
 # 画像パスから入力画像データに変換
 input_image = Image.open(image_path).convert('RGB')
