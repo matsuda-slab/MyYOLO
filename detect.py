@@ -17,7 +17,7 @@ NUM_CLASSES = 80
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
-parser.add_argument('--image', default='images/dog.png')
+parser.add_argument('--image', default='images/dog.jpg')
 parser.add_argument('--conf_thres', default=0.5)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
