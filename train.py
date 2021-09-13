@@ -25,6 +25,7 @@ BATCH_SIZE   = args.batch_size
 EPOCHS       = args.epochs
 LR           = args.lr
 TRAIN_PATH   = DATA_ROOT + '/trainvalno5k.txt'
+VALID_PATH   = DATA_ROOT + '/5k.txt'
 DECAY        = 0.0005
 SUBDIVISION  = 2
 BURN_IN      = 1000
@@ -47,11 +48,11 @@ dataloader = _create_data_loader(
     )
 
 # Load validation dataloader
-# validation_dataloader = _create_validation_data_loader(
-#     valid_path,
-#     mini_batch_size,
-#     model.hyperparams['height'],
-#     args.n_cpu)
+validation_dataloader = _create_validation_data_loader(
+    VALID_PATH,
+    BATCH_SIZE,
+    IMG_SIZE
+    )
 
 # モデルの生成
 model = load_model(weights_path, device, NUM_CLASSES)
@@ -62,6 +63,7 @@ optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # config�
 
 # lossのグラフ用リスト
 losses = []
+valid_losses = []
 
 # 学習ループ
 model.train()
@@ -103,9 +105,18 @@ for epoch in range(EPOCHS):
 
         if batches_done % 10 == 0:
             print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
+    # validationデータでの検証
+    for ite, (_, image, target) in enumerate(validation_dataloader):
+        image = image.to(device)
+        target = target.to(device)
+
+        outputs = model(image)
+
+        valid_loss, _ = compute_loss(outputs, target, model)
 
 
     losses.append(loss.item())
+    valid_losses.append(valid_loss.item())
 
 end = time.ctime()
 end_cnv = time.strptime(end)
@@ -135,4 +146,5 @@ with open(train_params_file, 'w') as f:
 torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
 
 # lossグラフの作成
-plot_graph(losses, EPOCHS, result_path)
+plot_graph(losses, EPOCHS, result_path + 'loss.png')
+plot_graph(valid_losses, EPOCHS, result_path + 'valid_loss.png')
