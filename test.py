@@ -19,11 +19,12 @@ parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--conf_thres', default=0.01)
 parser.add_argument('--nms_thres', default=0.4)
 parser.add_argument('--iou_thres', default=0.5)
-parser.add_argument('--class_file', default='coco.names')
-parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
+parser.add_argument('--class_file', default='coco_car.names')
+parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
 args = parser.parse_args()
 
-NUM_CLASSES  = 80
+#NUM_CLASSES  = 80
+NUM_CLASSES  = 1
 BATCH_SIZE   = 8
 IMG_SIZE     = 416
 DATA_ROOT    = args.data_root
@@ -44,10 +45,10 @@ with open(class_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-#model = YOLO()
-#model.load_state_dict(torch.load(weights_path, map_location=device))
-#model.to(device)
-model = load_model(weights_path, device)
+model = YOLO(num_classes=1)
+model.load_state_dict(torch.load(weights_path, map_location=device))
+model.to(device)
+#model = load_model(weights_path, device)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(

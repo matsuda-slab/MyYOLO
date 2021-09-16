@@ -3,4 +3,5 @@ weights/*
 images
 __pycache__/
 output.jpg
-log/*.png
+results/
+log/*
