@@ -227,10 +227,41 @@ class YOLOLayer(nn.Module):
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
 
-def load_model(weights_path, device, num_classes=80):
-    model = YOLO(num_classes).to(device)
+def load_model(weights_path, device, num_classes=80, trans=False):
+    model = None
 
-    if weights_path:
-        model.load_weights(weights_path, device)
+    param_to_update = []
+    if trans:
+      update_param_names = ['conv10.weight', 'conv10.bias',
+                            'conv13.weight', 'conv13.bias']
 
-    return model
+      model = YOLO(80).to(device)
+      model.load_weights(weights_path, device)
+
+      # 最終層を置き換え
+      ylch = (5 + num_classes) * 3
+      model.conv10 = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+      model.conv13 = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+      model.yolo1 = YOLOLayer(model.anchors[1], model.img_size, num_classes)
+      model.yolo2 = YOLOLayer(model.anchors[0], model.img_size, num_classes)
+      model.yolo_layers = [model.yolo1, model.yolo2]
+
+      # 置き換えた層以外のパラメータをフリーズ
+      for (key, param) in model.named_parameters():
+        if key in update_param_names:
+          param.requires_grad = True
+          param_to_update.append(param)
+        else:
+          param.requires_grad = False
+
+      model.to(device)
+      return model, param_to_update
+
+    else:
+      if weights_path:
+        model = YOLO(num_classes).to(device)
+        model.load_state_dict(torch.load(weights_path, map_location=device))
+      else:
+        model = YOLO(num_classes).to(device)
+
+      return model

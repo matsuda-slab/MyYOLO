@@ -45,10 +45,10 @@ with open(class_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = YOLO(num_classes=1)
-model.load_state_dict(torch.load(weights_path, map_location=device))
-model.to(device)
-#model = load_model(weights_path, device)
+#model = YOLO(num_classes=1)
+#model.load_state_dict(torch.load(weights_path, map_location=device))
+#model.to(device)
+model = load_model(weights_path, device, num_classes=1)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(

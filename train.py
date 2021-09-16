@@ -2,7 +2,7 @@ import torch
 from utils.datasets import _create_data_loader
 import torch.nn as nn
 import torch.optim as optim
-from utils.datasets import _create_data_loader
+from utils.datasets import _create_data_loader, _create_validation_data_loader
 from torch.utils.data import DataLoader
 from utils.loss import compute_loss
 from utils.utils import plot_graph
@@ -18,6 +18,7 @@ parser.add_argument('--epochs', default=100)
 parser.add_argument('--lr', default=0.0001)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
 parser.add_argument('--output_model', default='yolo-tiny.pt')
+parser.add_argument('--trans', action='store_true', default=False)
 args = parser.parse_args()
 
 DATA_ROOT    = args.data_root
@@ -33,6 +34,7 @@ lr_steps     = [[400000, 0.1], [450000, 0.1]]
 weights_path = args.weights
 NUM_CLASSES  = 1
 IMG_SIZE     = 416
+TRANS        = args.trans   # 転移学習
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -55,10 +57,17 @@ validation_dataloader = _create_validation_data_loader(
     )
 
 # モデルの生成
-model = load_model(weights_path, device, NUM_CLASSES)
+if TRANS:
+    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS)
+else:
+    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS)
 
 # 最適化アルゴリズム, 損失関数の定義
-optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
+if TRANS:
+    optimizer = optim.Adam(param_to_update, lr=LR, weight_decay=DECAY)  # configに合わせて
+else:
+    optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
+
 # criterion = # loss算出クラス・関数を定義する
 
 # lossのグラフ用リスト
@@ -70,6 +79,10 @@ model.train()
 print("Start Training\n")
 start = time.ctime()
 start_cnv = time.strptime(start)
+batches_done = 0
+
+print(model)
+
 for epoch in range(EPOCHS):
     for ite, (_, image, target) in enumerate(dataloader):
         batches_done = len(dataloader) * epoch + ite
@@ -105,14 +118,17 @@ for epoch in range(EPOCHS):
 
         if batches_done % 10 == 0:
             print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
+
     # validationデータでの検証
-    for ite, (_, image, target) in enumerate(validation_dataloader):
+    for _, image, target in validation_dataloader:
         image = image.to(device)
         target = target.to(device)
 
         outputs = model(image)
 
         valid_loss, _ = compute_loss(outputs, target, model)
+
+    print("valid_loss = %.4f" % (loss))
 
 
     losses.append(loss.item())
@@ -141,10 +157,12 @@ with open(train_params_file, 'w') as f:
     f.write("train_data_list : " + str(TRAIN_PATH) + "\n")
     f.write("num_classes : " + str(NUM_CLASSES) + "\n")
     f.write("image_size : " + str(IMG_SIZE) + "\n")
+    f.write("trans : " + str(TRANS) + "\n")
+    f.write("loss (last) :" + str(losses[-1]))
 
 # 学習結果(重みパラメータ)の保存
 torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
 
 # lossグラフの作成
-plot_graph(losses, EPOCHS, result_path + 'loss.png')
-plot_graph(valid_losses, EPOCHS, result_path + 'valid_loss.png')
+plot_graph(losses, EPOCHS, result_path + '/loss.png')
+plot_graph(valid_losses, EPOCHS, result_path + '/valid_loss.png')
