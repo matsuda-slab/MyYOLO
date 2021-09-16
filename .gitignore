@@ -4,4 +4,7 @@ images
 __pycache__/
 output.jpg
 results/
-log/*
+log
+models.py
+yolov3-tiny.cfg
+parse_config.py

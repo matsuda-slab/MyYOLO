@@ -16,15 +16,14 @@ from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
-parser.add_argument('--conf_thres', default=0.01)
-parser.add_argument('--nms_thres', default=0.4)
-parser.add_argument('--iou_thres', default=0.5)
+parser.add_argument('--conf_thres', type=float, default=0.01)
+parser.add_argument('--nms_thres', type=float, default=0.4)
+parser.add_argument('--iou_thres', type=float, default=0.5)
 parser.add_argument('--class_file', default='coco_car.names')
+parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
 args = parser.parse_args()
 
-#NUM_CLASSES  = 80
-NUM_CLASSES  = 1
 BATCH_SIZE   = 8
 IMG_SIZE     = 416
 DATA_ROOT    = args.data_root
@@ -35,6 +34,7 @@ conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
 iou_thres    = args.iou_thres
 class_file   = args.class_file
+NUM_CLASSES  = args.num_classes
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
@@ -48,7 +48,7 @@ with open(class_file, 'r') as f:
 #model = YOLO(num_classes=1)
 #model.load_state_dict(torch.load(weights_path, map_location=device))
 #model.to(device)
-model = load_model(weights_path, device, num_classes=1)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(
