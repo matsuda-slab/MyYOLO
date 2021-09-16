@@ -16,8 +16,8 @@ from utils.utils import non_max_suppression
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--image', default='images/dog.jpg')
-parser.add_argument('--conf_thres', default=0.5)
-parser.add_argument('--nms_thres', default=0.4)
+parser.add_argument('--conf_thres', type=float, default=0.5)
+parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--class_names', default='coco.names')
@@ -40,17 +40,17 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = YOLO(num_classes=NUM_CLASSES)
-model.load_state_dict(torch.load(weights_path, map_location=device))
-model.to(device)
-# model = load_model(weights_path, device)
+# model = YOLO(num_classes=NUM_CLASSES)
+# model.load_state_dict(torch.load(weights_path, map_location=device))
+# model.to(device)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES)
 
 # 画像パスから入力画像データに変換
 input_image = Image.open(image_path).convert('RGB')
 resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
-input_image = resizer(input_image)
-input_image = np.array(input_image, dtype=np.uint8)
-image       = torch.from_numpy(input_image).to(device)
+resized_image = resizer(input_image)
+resized_image = np.array(resized_image, dtype=np.uint8)
+image       = torch.from_numpy(resized_image).to(device)
 image       = image.permute(2, 0, 1)
 image       = image.unsqueeze(0)
 image       = image.type(tensor_type)
@@ -65,9 +65,10 @@ output = non_max_suppression(output, conf_thres, nms_thres)
 
 output = output[0]
 print("output.shape :", output.shape)
+print(output)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
-orig_h, orig_w = input_image.shape[:2]
+orig_w, orig_h = input_image.size
 # 416 x 416 に圧縮したときに加えた情報量 (?) を算出
 # 例えば, 640 x 480 を 416 x 416 にリサイズすると, 横の長さに合わせると
 # 縦が 416 より小さくなってしまうので, y成分に情報を加えて, 416にしている
