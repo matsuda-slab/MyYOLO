@@ -25,9 +25,12 @@
 	eriklindernoren のものを使用している.
 	今後, 自分で実装したものに差し替える予定.
 
-* weights/yolov3-tiny.pt は
+* weights/yolov3-tiny-old.pt は
   pjreddie の yolov3-tiny.weights を, ultralystic の yolov3 の
   convert (coremltools) を使って変換したもの
+
+* weights/yolov3-tiny.pt は
+  ultralytics の releaseからダウンロードしてきたもの
 
 * weightsのタイムスタンプが 9/10 より前のものは, convのbiasがないものなので,
   現在のモデルには使えない.
