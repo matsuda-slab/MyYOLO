@@ -13,11 +13,12 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
-parser.add_argument('--batch_size', default=32)
-parser.add_argument('--epochs', default=100)
-parser.add_argument('--lr', default=0.0001)
+parser.add_argument('--batch_size', type=int, default=32)
+parser.add_argument('--epochs', type=int, default=100)
+parser.add_argument('--lr', type-float, default=0.0001)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
 parser.add_argument('--output_model', default='yolo-tiny.pt')
+parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--trans', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -32,7 +33,7 @@ SUBDIVISION  = 2
 BURN_IN      = 1000
 lr_steps     = [[400000, 0.1], [450000, 0.1]]
 weights_path = args.weights
-NUM_CLASSES  = 1
+NUM_CLASSES  = args.num_classes
 IMG_SIZE     = 416
 TRANS        = args.trans   # 転移学習
 

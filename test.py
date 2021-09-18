@@ -16,6 +16,7 @@ from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
+parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--conf_thres', type=float, default=0.01)
 parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--iou_thres', type=float, default=0.5)
@@ -24,11 +25,11 @@ parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
 args = parser.parse_args()
 
-BATCH_SIZE   = 8
 IMG_SIZE     = 416
 DATA_ROOT    = args.data_root
 VALID_PATH   = DATA_ROOT + '/5k.txt'
 
+BATCH_SIZE   = args.batch_size
 weights_path = args.weights
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
