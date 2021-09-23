@@ -15,14 +15,14 @@ from model import YOLO, load_model
 from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--weights', default='weights/tiny-yolo.model')
+parser.add_argument('--weights', default='weights/yolov3-tiny.weights')
 parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--conf_thres', type=float, default=0.01)
 parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--iou_thres', type=float, default=0.5)
-parser.add_argument('--class_file', default='coco_car.names')
+parser.add_argument('--class_file', default='coco.names')
 parser.add_argument('--num_classes', type=int, default=80)
-parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO_car/2014')
+parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 args = parser.parse_args()
 
 IMG_SIZE     = 416
@@ -67,14 +67,18 @@ for _, images, targets in dataloader:
     # ラベル(番号)をリスト化している (あとで必要なのだろう)
     labels += targets[:, 1].tolist()
 
-    images = images.type(tensor_type)
-
     # w, h を x, y に直すのは, あとの関数で必要なのだろう
     targets[:, 2:] = xywh2xyxy(targets[:, 2:])
     targets[:, 2:] *= IMG_SIZE
 
+    images = images.type(tensor_type)
+
     with torch.no_grad():
         outputs = model(images)
+        #""" debug """
+        #with open("debug.txt", "a") as df:
+        #    df.write(str(outputs[0, :, 2]))
+        #"""       """
     # nmsをかける
         outputs = non_max_suppression(outputs, conf_thres, nms_thres)
 
@@ -94,4 +98,4 @@ for ap in ap_table:
     print(ap)
 
 mAP = AP.mean() 
-print("mAP :", mAP)
+print("mAP : %.5f" % mAP)

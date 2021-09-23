@@ -65,7 +65,6 @@ output = non_max_suppression(output, conf_thres, nms_thres)
 
 output = output[0]
 print("output.shape :", output.shape)
-print(output)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_w, orig_h = input_image.size

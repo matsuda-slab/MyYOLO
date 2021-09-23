@@ -7,7 +7,8 @@ import numpy as np
 class YOLO(nn.Module):
     def __init__(self, num_classes):
         super(YOLO, self).__init__()
-        self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
+        #self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
+        self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
         self.img_size    = 416
         self.num_classes = num_classes
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
@@ -157,58 +158,64 @@ class YOLO(nn.Module):
         layer.running_var.copy_(bn_rv)
         ptr   += num_rv
 
+        return ptr
+
     def set_conv_weights(self, layer, params, ptr):
         num_w  = layer.weight.numel()
         conv_w = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
         layer.weight.data.copy_(conv_w)
         ptr   += num_w
+
+        return ptr
     
     def set_conv_biases(self, layer, params, ptr):
         num_b  = layer.bias.numel()
         conv_b = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
         layer.bias.data.copy_(conv_b)
         ptr   += num_b
+
+        return ptr
     
     def load_darknet_weights(self, weights_path):
         # バイナリファイルを読み込み, 配列にデータを格納
         with open(weights_path, "rb") as f:
             # skip header
-            f.read(20)
+            #f.read(20)
 
             weights = np.fromfile(f, dtype=np.float32)
     
-        ptr = 0
+        ptr = 5        # 0~4 は, ヘッダのようなものが入っている
     
-        self.set_bn_params(self.bn1, weights, ptr)
-        self.set_conv_weights(self.conv1, weights, ptr)
-        self.set_bn_params(self.bn2, weights, ptr)
-        self.set_conv_weights(self.conv2, weights, ptr)
-        self.set_bn_params(self.bn3, weights, ptr)
-        self.set_conv_weights(self.conv3, weights, ptr)
-        self.set_bn_params(self.bn4, weights, ptr)
-        self.set_conv_weights(self.conv4, weights, ptr)
-        self.set_bn_params(self.bn5, weights, ptr)
-        self.set_conv_weights(self.conv5, weights, ptr)
-        self.set_bn_params(self.bn6, weights, ptr)
-        self.set_conv_weights(self.conv6, weights, ptr)
+        ptr = self.set_bn_params(self.bn1, weights, ptr)
+        ptr = self.set_conv_weights(self.conv1, weights, ptr)
+        ptr = self.set_bn_params(self.bn2, weights, ptr)
+        ptr = self.set_conv_weights(self.conv2, weights, ptr)
+        ptr = self.set_bn_params(self.bn3, weights, ptr)
+        ptr = self.set_conv_weights(self.conv3, weights, ptr)
+        ptr = self.set_bn_params(self.bn4, weights, ptr)
+        ptr = self.set_conv_weights(self.conv4, weights, ptr)
+        ptr = self.set_bn_params(self.bn5, weights, ptr)
+        ptr = self.set_conv_weights(self.conv5, weights, ptr)
+        ptr = self.set_bn_params(self.bn6, weights, ptr)
+        ptr = self.set_conv_weights(self.conv6, weights, ptr)
     
-        self.set_bn_params(self.bn7, weights, ptr)
-        self.set_conv_weights(self.conv7, weights, ptr)
-        self.set_bn_params(self.bn8, weights, ptr)
-        self.set_conv_weights(self.conv8, weights, ptr)
-        self.set_bn_params(self.bn9, weights, ptr)
-        self.set_conv_weights(self.conv9, weights, ptr)
+        ptr = self.set_bn_params(self.bn7, weights, ptr)
+        ptr = self.set_conv_weights(self.conv7, weights, ptr)
+        ptr = self.set_bn_params(self.bn8, weights, ptr)
+        ptr = self.set_conv_weights(self.conv8, weights, ptr)
+        ptr = self.set_bn_params(self.bn9, weights, ptr)
+        ptr = self.set_conv_weights(self.conv9, weights, ptr)
     
-        self.set_conv_biases(self.conv10, weights, ptr)
-        self.set_conv_weights(self.conv10, weights, ptr)
+        ptr = self.set_conv_biases(self.conv10, weights, ptr)
+        ptr = self.set_conv_weights(self.conv10, weights, ptr)
     
-        self.set_bn_params(self.bn10, weights, ptr)
-        self.set_conv_weights(self.conv11, weights, ptr)
-        self.set_bn_params(self.bn11, weights, ptr)
-        self.set_conv_weights(self.conv12, weights, ptr)
+        ptr = self.set_bn_params(self.bn10, weights, ptr)
+        ptr = self.set_conv_weights(self.conv11, weights, ptr)
+        ptr = self.set_bn_params(self.bn11, weights, ptr)
+        ptr = self.set_conv_weights(self.conv12, weights, ptr)
     
-        self.set_conv_biases(self.conv13, weights, ptr)
-        self.set_conv_weights(self.conv13, weights, ptr)
+        ptr = self.set_conv_biases(self.conv13, weights, ptr)
+        ptr = self.set_conv_weights(self.conv13, weights, ptr)
 
     def forward(self, x):
         yolo_outputs = []
@@ -248,7 +255,8 @@ class YOLO(nn.Module):
         yolo_outputs.append(x2)
 
         # たぶんself.trainingは, model.train() にした時点でTrueになる
-        return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
+        #return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
+        return  torch.cat(yolo_outputs, 1)
 
 class YOLOLayer(nn.Module):
     def __init__(self, anchors, img_size, num_classes=80):
