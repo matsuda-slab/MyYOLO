@@ -255,8 +255,8 @@ class YOLO(nn.Module):
         yolo_outputs.append(x2)
 
         # たぶんself.trainingは, model.train() にした時点でTrueになる
-        #return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
-        return  torch.cat(yolo_outputs, 1)
+        return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
+        #return  torch.cat(yolo_outputs, 1)
 
 class YOLOLayer(nn.Module):
     def __init__(self, anchors, img_size, num_classes=80):
@@ -313,23 +313,26 @@ class YOLOLayer(nn.Module):
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
 
-def load_model(weights_path, device, num_classes=80, trans=False):
+def load_model(weights_path, device, num_classes=80, trans=False, finetune=False):
     model = None
 
-    param_to_update = []
     if trans:
+      param_to_update = []
       update_param_names = ['conv10.weight', 'conv10.bias',
                             'conv13.weight', 'conv13.bias']
 
       model = YOLO(80).to(device)
-      model.load_weights(weights_path, device)
+      if weights_path.endswith('weights'):
+          model.load_darknet_weights(weights_path);
+      else:
+          model.load_weights(weights_path, device)
 
       # 最終層を置き換え
       ylch = (5 + num_classes) * 3
       model.conv10 = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
       model.conv13 = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-      model.yolo1 = YOLOLayer(model.anchors[1], model.img_size, num_classes)
-      model.yolo2 = YOLOLayer(model.anchors[0], model.img_size, num_classes)
+      model.yolo1  = YOLOLayer(model.anchors[1], model.img_size, num_classes)
+      model.yolo2  = YOLOLayer(model.anchors[0], model.img_size, num_classes)
       model.yolo_layers = [model.yolo1, model.yolo2]
 
       # 置き換えた層以外のパラメータをフリーズ
@@ -343,13 +346,29 @@ def load_model(weights_path, device, num_classes=80, trans=False):
       model.to(device)
       return model, param_to_update
 
+    elif finetune:
+      model = YOLO(80).to(device)
+      if weights_path.endswith('weights'):
+          model.load_darknet_weights(weights_path);
+      else:
+          model.load_weights(weights_path, device)
+      # 最終層を置き換え
+      ylch = (5 + num_classes) * 3
+      model.conv10 = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+      model.conv13 = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+      model.yolo1  = YOLOLayer(model.anchors[1], model.img_size, num_classes)
+      model.yolo2  = YOLOLayer(model.anchors[0], model.img_size, num_classes)
+      model.yolo_layers = [model.yolo1, model.yolo2]
+
+      model.to(device)
+      return model
+
     else:
       model = YOLO(num_classes).to(device)
       if weights_path:
         if weights_path.endswith('weights'):
             model.load_darknet_weights(weights_path)
         else:       # pt file
-            model = YOLO(num_classes).to(device)
             model.load_state_dict(torch.load(weights_path, map_location=device))
 
       return model

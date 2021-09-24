@@ -15,11 +15,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--epochs', type=int, default=100)
-parser.add_argument('--lr', type-float, default=0.0001)
+parser.add_argument('--lr', type=float, default=0.0001)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 parser.add_argument('--output_model', default='yolo-tiny.pt')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--trans', action='store_true', default=False)
+parser.add_argument('--finetune', action='store_true', default=False)
 args = parser.parse_args()
 
 DATA_ROOT    = args.data_root
@@ -36,6 +37,7 @@ weights_path = args.weights
 NUM_CLASSES  = args.num_classes
 IMG_SIZE     = 416
 TRANS        = args.trans   # 転移学習
+FINETUNE     = args.finetune   # ファインチューニング
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -59,9 +61,9 @@ validation_dataloader = _create_validation_data_loader(
 
 # モデルの生成
 if TRANS:
-    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS)
+    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE)
 else:
-    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS)
+    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE)
 
 # 最適化アルゴリズム, 損失関数の定義
 if TRANS:
@@ -159,6 +161,7 @@ with open(train_params_file, 'w') as f:
     f.write("num_classes : " + str(NUM_CLASSES) + "\n")
     f.write("image_size : " + str(IMG_SIZE) + "\n")
     f.write("trans : " + str(TRANS) + "\n")
+    f.write("finetune : " + str(FINETUNE) + "\n")
     f.write("loss (last) :" + str(losses[-1]))
 
 # 学習結果(重みパラメータ)の保存

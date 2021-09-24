@@ -1,3 +1,5 @@
+from utils.transforms import Resize, DEFAULT_TRANSFORMS
+import torch
 import os
 import sys
 import argparse
@@ -5,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
@@ -46,14 +47,19 @@ with open(name_file, 'r') as f:
 model = load_model(weights_path, device, num_classes=NUM_CLASSES)
 
 # 画像パスから入力画像データに変換
-input_image = Image.open(image_path).convert('RGB')
-resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
-resized_image = resizer(input_image)
-resized_image = np.array(resized_image, dtype=np.uint8)
-image       = torch.from_numpy(resized_image).to(device)
-image       = image.permute(2, 0, 1)
-image       = image.unsqueeze(0)
-image       = image.type(tensor_type)
+#input_image = Image.open(image_path).convert('RGB')
+#resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
+#resized_image = resizer(input_image)
+#resized_image = np.array(resized_image, dtype=np.uint8)
+#image       = torch.from_numpy(resized_image).to(device)
+#image       = image.permute(2, 0, 1)
+#image       = image.unsqueeze(0)
+#image       = image.type(tensor_type)
+input_image = np.array(Image.open(image_path).convert('RGB'), dtype=np.uint8)
+image = transforms.Compose([
+    DEFAULT_TRANSFORMS,
+    Resize(416)])((input_image, np.zeros((1,5))))[0].unsqueeze(0)
+image = image.to(device)
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
@@ -67,7 +73,7 @@ output = output[0]
 print("output.shape :", output.shape)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
-orig_w, orig_h = input_image.size
+orig_h, orig_w = input_image.shape[0:2]
 # 416 x 416 に圧縮したときに加えた情報量 (?) を算出
 # 例えば, 640 x 480 を 416 x 416 にリサイズすると, 横の長さに合わせると
 # 縦が 416 より小さくなってしまうので, y成分に情報を加えて, 416にしている
