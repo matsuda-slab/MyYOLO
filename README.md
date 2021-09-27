@@ -24,6 +24,15 @@
                   --num_classes 1 \
                   --trans
 
+* 一番惜しい検出記録
+  python detect.py --weights results/20210924_174004/yolo-tiny.pt \
+                   --class_names coco_car.names \
+                   --num_classes 1 \
+                   --image images/COCO_sample_car2.jpg \
+                   --nms_thres 0.2 \
+                   --conf_thres 0.1
+
+
 ## 備考
 * 損失関数は, eriklindernoren の loss.py を使用している.
 	今後, 自分で実装したものに差し替える予定.

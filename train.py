@@ -10,6 +10,9 @@ from model import YOLO, load_model
 import time
 import argparse
 import os
+import tqdm
+import numpy as np
+from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
@@ -21,6 +24,11 @@ parser.add_argument('--output_model', default='yolo-tiny.pt')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--trans', action='store_true', default=False)
 parser.add_argument('--finetune', action='store_true', default=False)
+parser.add_argument('--valid_iou_thres', type=float, default=0.5)
+parser.add_argument('--valid_nms_thres', type=float, default=0.5)
+parser.add_argument('--valid_conf_thres', type=float, default=0.1)
+parser.add_argument('--no_valid', action='store_true', default=False)
+parser.add_argument('--class_names', default='coco.names')
 args = parser.parse_args()
 
 DATA_ROOT    = args.data_root
@@ -39,7 +47,17 @@ IMG_SIZE     = 416
 TRANS        = args.trans   # 転移学習
 FINETUNE     = args.finetune   # ファインチューニング
 
+iou_thres    = args.valid_iou_thres
+nms_thres    = args.valid_nms_thres
+conf_thres   = args.valid_conf_thres
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+
+class_file = args.class_names
+class_names = []
+with open(class_file, 'r') as f:
+    class_names = f.read().splitlines()
 
 # データの準備・前処理
 #    dataset = MyDataset(DATA_ROOT)
@@ -75,10 +93,9 @@ else:
 
 # lossのグラフ用リスト
 losses = []
-valid_losses = []
+#valid_losses = []
 
 # 学習ループ
-model.train()
 print("Start Training\n")
 start = time.ctime()
 start_cnv = time.strptime(start)
@@ -87,6 +104,7 @@ batches_done = 0
 print(model)
 
 for epoch in range(EPOCHS):
+    model.train()
     for ite, (_, image, target) in enumerate(dataloader):
         batches_done = len(dataloader) * epoch + ite
 
@@ -123,19 +141,43 @@ for epoch in range(EPOCHS):
             print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
 
     # validationデータでの検証
-    for _, image, target in validation_dataloader:
-        image = image.to(device)
-        target = target.to(device)
+    if not args.no_valid:
+        sample_metrics = []
+        labels         = []
+        model.eval()
+        print("Validating ...")
+        for _, image, target in tqdm.tqdm(validation_dataloader):
+            labels += target[:, 1].tolist()
+            image = image.type(tensor_type)
 
-        outputs = model(image)
+            target[:, 2:] = xywh2xyxy(target[:, 2:])
+            target[:, 2:] *= IMG_SIZE
 
-        valid_loss, _ = compute_loss(outputs, target, model)
+            with torch.no_grad():
+                outputs = model(image)
+                outputs = non_max_suppression(outputs, conf_thres, nms_thres)
 
-    print("valid_loss = %.4f" % (loss))
+            sample_metrics += get_batch_statistics(outputs, target, iou_thres)
 
+        TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+        metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
-    losses.append(loss.item())
-    valid_losses.append(valid_loss.item())
+        # APの算出
+        precision, recall, AP, f1, ap_class = metrics_output
+
+        if NUM_CLASSES == 1:
+            print("AP = %.5f" % (AP))
+        else:
+            ap_table = [['Index', 'Class', 'AP']]
+            for i, c in enumerate(ap_class):
+                ap_table += [[c, class_names[c], "%.5f" % AP[i]]]
+            for ap in ap_table:
+                print(ap)
+        mAP = AP.mean() 
+        print("mAP : %.5f" % mAP)
+
+        losses.append(loss.item())
+        #valid_losses.append(valid_loss.item())
 
 end = time.ctime()
 end_cnv = time.strptime(end)
@@ -169,4 +211,4 @@ torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
 
 # lossグラフの作成
 plot_graph(losses, EPOCHS, result_path + '/loss.png')
-plot_graph(valid_losses, EPOCHS, result_path + '/valid_loss.png')
+#plot_graph(valid_losses, EPOCHS, result_path + '/valid_loss.png')
