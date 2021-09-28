@@ -204,7 +204,8 @@ with open(train_params_file, 'w') as f:
     f.write("image_size : " + str(IMG_SIZE) + "\n")
     f.write("trans : " + str(TRANS) + "\n")
     f.write("finetune : " + str(FINETUNE) + "\n")
-    f.write("loss (last) :" + str(losses[-1]))
+    f.write("loss (last) :" + str(losses[-1]) + "\n")
+    f.write("anchors :", str(model.anchors))
 
 # 学習結果(重みパラメータ)の保存
 torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
