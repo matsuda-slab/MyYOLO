@@ -20,21 +20,21 @@ parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--conf_thres', type=float, default=0.01)
 parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--iou_thres', type=float, default=0.5)
-parser.add_argument('--class_file', default='coco.names')
+parser.add_argument('--class_names', default='coco.names')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 args = parser.parse_args()
 
 IMG_SIZE     = 416
 DATA_ROOT    = args.data_root
-VALID_PATH   = DATA_ROOT + '/5k.txt'
+VALID_PATH   = DATA_ROOT + '/5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '/test.txt'
 
 BATCH_SIZE   = args.batch_size
 weights_path = args.weights
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
 iou_thres    = args.iou_thres
-class_file   = args.class_file
+class_file   = args.class_names
 NUM_CLASSES  = args.num_classes
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -35,8 +35,8 @@ DATA_ROOT    = args.data_root
 BATCH_SIZE   = args.batch_size
 EPOCHS       = args.epochs
 LR           = args.lr
-TRAIN_PATH   = DATA_ROOT + '/trainvalno5k.txt'
-VALID_PATH   = DATA_ROOT + '/5k.txt'
+TRAIN_PATH   = DATA_ROOT + '/trainvalno5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '/train.txt'
+VALID_PATH   = DATA_ROOT + '/5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '/valid.txt'
 DECAY        = 0.0005
 SUBDIVISION  = 2
 BURN_IN      = 1000
@@ -93,7 +93,8 @@ else:
 
 # lossのグラフ用リスト
 losses = []
-#valid_losses = []
+mAPs   = []
+lrs    = []
 
 # 学習ループ
 print("Start Training\n")
@@ -177,7 +178,8 @@ for epoch in range(EPOCHS):
         print("mAP : %.5f" % mAP)
 
         losses.append(loss.item())
-        #valid_losses.append(valid_loss.item())
+        mAPs.append(mAP.item())
+        lrs.append(lr)
 
 end = time.ctime()
 end_cnv = time.strptime(end)
@@ -205,11 +207,12 @@ with open(train_params_file, 'w') as f:
     f.write("trans : " + str(TRANS) + "\n")
     f.write("finetune : " + str(FINETUNE) + "\n")
     f.write("loss (last) :" + str(losses[-1]) + "\n")
-    f.write("anchors :", str(model.anchors))
+    f.write("anchors :" + str(model.anchors))
 
 # 学習結果(重みパラメータ)の保存
 torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
 
 # lossグラフの作成
 plot_graph(losses, EPOCHS, result_path + '/loss.png')
-#plot_graph(valid_losses, EPOCHS, result_path + '/valid_loss.png')
+plot_graph(mAPs, EPOCHS, result_path + '/mAP.png', label="mAP")
+plot_graph(lrs, EPOCHS, result_path + '/lr.png', label="learning rate")

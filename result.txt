@@ -1,2 +1,0 @@
-tiny-yolo.model (9/1):
-  最終 loss : 0.1278
