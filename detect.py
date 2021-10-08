@@ -13,6 +13,7 @@ from torchvision import transforms
 from PIL import Image
 from model import YOLO, load_model
 from utils.utils import non_max_suppression
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
@@ -55,6 +56,7 @@ model = load_model(weights_path, device, num_classes=NUM_CLASSES)
 #image       = image.permute(2, 0, 1)
 #image       = image.unsqueeze(0)
 #image       = image.type(tensor_type)
+start = time.time();
 input_image = np.array(Image.open(image_path).convert('RGB'), dtype=np.uint8)
 image = transforms.Compose([
     DEFAULT_TRANSFORMS,
@@ -115,6 +117,9 @@ for x_min, y_min, x_max, y_max, conf, class_pred in output:
 
     # ラベル
     plt.text(x_min, y_min, s=class_names[int(class_pred)], color='white', verticalalignment='top', bbox={'color': color, 'pad':0})
+
+end = time.time()
+print("elapsed time = %.4f sec" % (end - start))
 
 # 描画する
 plt.axis("off")     # 軸をオフにする
