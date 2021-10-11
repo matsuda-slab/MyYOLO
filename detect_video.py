@@ -1,4 +1,3 @@
-from utils.transforms import Resize, DEFAULT_TRANSFORMS
 import torch
 import os
 import sys
@@ -8,10 +7,10 @@ import random
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
-from PIL import Image
 import cv2
 from model import YOLO, load_model
 from utils.utils import non_max_suppression
+from utils.transforms_detect import resize_aspect_ratio
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
@@ -50,11 +49,15 @@ if not cap.isOpened():
 
 while(cap.isOpened()):
     ret, frame = cap.read()
-    input_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    image = transforms.Compose([
-        DEFAULT_TRANSFORMS,
-        Resize(416)])((input_image, np.zeros((1,5))))[0].unsqueeze(0)
+    rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    image = transforms.ToTensor()(frame)
+
+    image = resize_aspect_ratio(image)
+    image = torch.from_numpy(image)
     image = image.to(device)
+    image = image.permute(2, 0, 1)
+    image = image[[2,1,0],:,:]
+    image = image.unsqueeze(0)
 
     # 入力画像からモデルによる推論を実行する
     model.eval()
@@ -68,7 +71,7 @@ while(cap.isOpened()):
     print("output.shape :", output.shape)
 
     ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
-    orig_h, orig_w = input_image.shape[0:2]
+    orig_h, orig_w = frame.shape[0:2]
     # 416 x 416 に圧縮したときに加えた情報量 (?) を算出
     # 例えば, 640 x 480 を 416 x 416 にリサイズすると, 横の長さに合わせると
     # 縦が 416 より小さくなってしまうので, y成分に情報を加えて, 416にしている
@@ -92,10 +95,10 @@ while(cap.isOpened()):
         box_w = x_max - x_min
         box_h = y_max - y_min
 
-        cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
-        cv2.putText(frame, 'car', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
+        cv2.rectangle(rgb_image, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
+        cv2.putText(rgb_image, 'car', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
 
-    cv2.imshow('frame', frame)
+    cv2.imshow('frame', rgb_image)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

@@ -1,4 +1,3 @@
-from utils.transforms import Resize, DEFAULT_TRANSFORMS
 from utils.transforms_detect import resize_aspect_ratio
 import torch
 import os
@@ -47,22 +46,7 @@ with open(name_file, 'r') as f:
 model = load_model(weights_path, device, num_classes=NUM_CLASSES)
 
 # 画像パスから入力画像データに変換
-#input_image = Image.open(image_path).convert('RGB')
-#resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
-#resized_image = resizer(input_image)
-#resized_image = np.array(resized_image, dtype=np.uint8)
-#image       = torch.from_numpy(resized_image).to(device)
-#image       = image.permute(2, 0, 1)
-#image       = image.unsqueeze(0)
-#image       = image.type(tensor_type)
 start = time.time();
-#   input_image = np.array(Image.open(image_path).convert('RGB'), dtype=np.uint8)
-#   image = transforms.Compose([
-#       DEFAULT_TRANSFORMS,
-#       Resize(416)])((input_image, np.zeros((1,5))))[0].unsqueeze(0)
-#   image = image.to(device)
-#np.set_printoptions(threshold=np.inf)
-#print(image.detach().cpu().numpy())
 
 input_image = cv2.imread(image_path)
 rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
@@ -71,21 +55,9 @@ image = transforms.ToTensor()(input_image)
 image = resize_aspect_ratio(image)
 image = torch.from_numpy(image)
 image = image.to(device)
-#image = torch.from_numpy(image).to(device)
 image = image.permute(2, 0, 1)
 image = image[[2,1,0],:,:]
 image = image.unsqueeze(0)
-#image = image.type(tensor_type)
-
-#resized_image = resized_image.squeeze(0)
-#resized_image = resized_image.transpose(1,2,0)
-#resized_image = resized_image[:, :, ::-1]
-#cv2.imshow('image_resized', image)
-#cv2.waitKey(0)
-
-#np.set_printoptions(threshold=np.inf)
-#image_print = image.detach().cpu().numpy()
-#print(image_print)
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
