@@ -10,3 +10,5 @@ yolov3-tiny.cfg
 parse_config.py
 tmp.py
 debug*
+*.pt
+*.tar.gz
