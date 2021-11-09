@@ -11,3 +11,6 @@ parse_config.py
 tmp.py
 debug*
 utils/git
+*.onnx
+*.pb
+*.tar.gz

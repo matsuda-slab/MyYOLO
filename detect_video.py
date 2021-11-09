@@ -95,10 +95,11 @@ while(cap.isOpened()):
         box_w = x_max - x_min
         box_h = y_max - y_min
 
-        cv2.rectangle(rgb_image, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
-        cv2.putText(rgb_image, 'car', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
+        cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
+        cv2.putText(frame, 'car', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
 
-    cv2.imshow('frame', rgb_image)
+    cv2.resize(frame, fx=0.5, fy=0.5)
+    cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

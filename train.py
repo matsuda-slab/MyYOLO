@@ -89,6 +89,8 @@ if TRANS:
 else:
     optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
 
+print("Model :", model.__class__.__name__);
+
 # criterion = # loss算出クラス・関数を定義する
 
 # lossのグラフ用リスト
@@ -194,6 +196,7 @@ os.makedirs(result_path)
 
 train_params_file = os.path.join(result_path, 'train_params.txt')
 with open(train_params_file, 'w') as f:
+    f.write("Model : " + str(model.__class__.__name__) + "\n")
     f.write("epochs : " + str(EPOCHS) + "\n")
     f.write("batch_size : " + str(BATCH_SIZE) + "\n")
     f.write("pretrained_weights : " + str(args.weights) + "\n")
