@@ -34,9 +34,9 @@ def convert(model, onnx_filepath, pb_filepath, input_shape):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', default="results/20211004_132244/yolo-tiny.pt")
-    parser.add_argument('--onnx_path', default="tiny-yolo.onnx")
-    parser.add_argument('--pb_path', default="tiny-yolo.pb")
+    parser.add_argument('--weights', default="results/20211109_191529/yolo-tiny.pt")
+    parser.add_argument('--onnx_path', default="yolo-tiny.onnx")
+    parser.add_argument('--pb_path', default="yolo-tiny.pb")
     args = parser.parse_args()
 
     device = torch.device("cpu")
@@ -50,7 +50,8 @@ def main():
     onnx_path = args.onnx_path
     pb_path   = args.pb_path
 
-    convert(model, onnx_path, pb_path, INPUT_SHAPE)
+    #convert(model, onnx_path, pb_path, INPUT_SHAPE)
+    torch2onnx(model, onnx_path, INPUT_SHAPE)
 
 if __name__ == "__main__":
     main()

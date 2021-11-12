@@ -94,9 +94,10 @@ print("Model :", model.__class__.__name__);
 # criterion = # loss算出クラス・関数を定義する
 
 # lossのグラフ用リスト
-losses = []
-mAPs   = []
-lrs    = []
+losses  = []
+mAPs    = []
+max_map = 0
+lrs     = []
 
 # 学習ループ
 print("Start Training\n")
@@ -178,6 +179,8 @@ for epoch in range(EPOCHS):
                 print(ap)
         mAP = AP.mean() 
         print("mAP : %.5f" % mAP)
+        if max_map < mAP:
+            max_map = mAP
 
         losses.append(loss.item())
         mAPs.append(mAP.item())
@@ -210,7 +213,9 @@ with open(train_params_file, 'w') as f:
     f.write("trans : " + str(TRANS) + "\n")
     f.write("finetune : " + str(FINETUNE) + "\n")
     f.write("loss (last) :" + str(losses[-1]) + "\n")
-    f.write("anchors :" + str(model.anchors))
+    f.write("anchors :" + str(model.anchors) + "\n")
+    f.write("MAX mAP :" + str(max_map) + "\n")
+    f.write("\n")
 
 # 学習結果(重みパラメータ)の保存
 torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
