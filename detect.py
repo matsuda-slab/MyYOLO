@@ -1,4 +1,4 @@
-from utils.transforms import Resize, DEFAULT_TRANSFORMS
+from utils.transforms_detect import resize_aspect_ratio
 import torch
 import os
 import sys
@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
+import cv2
 from model import YOLO, load_model
 from utils.utils import non_max_suppression
 import time
@@ -42,26 +43,21 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-# model = YOLO(num_classes=NUM_CLASSES)
-# model.load_state_dict(torch.load(weights_path, map_location=device))
-# model.to(device)
 model = load_model(weights_path, device, num_classes=NUM_CLASSES)
 
 # 画像パスから入力画像データに変換
-#input_image = Image.open(image_path).convert('RGB')
-#resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
-#resized_image = resizer(input_image)
-#resized_image = np.array(resized_image, dtype=np.uint8)
-#image       = torch.from_numpy(resized_image).to(device)
-#image       = image.permute(2, 0, 1)
-#image       = image.unsqueeze(0)
-#image       = image.type(tensor_type)
 start = time.time();
-input_image = np.array(Image.open(image_path).convert('RGB'), dtype=np.uint8)
-image = transforms.Compose([
-    DEFAULT_TRANSFORMS,
-    Resize(416)])((input_image, np.zeros((1,5))))[0].unsqueeze(0)
+
+input_image = cv2.imread(image_path)
+rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+image = transforms.ToTensor()(input_image)
+
+image = resize_aspect_ratio(image)
+image = torch.from_numpy(image)
 image = image.to(device)
+image = image.permute(2, 0, 1)
+image = image[[2,1,0],:,:]
+image = image.unsqueeze(0)
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
@@ -97,7 +93,7 @@ output[:, 3] = ((output[:, 3] - pad_y // 2) / unpad_h) * orig_h
 # 出力画像の下地として, 入力画像を読み込む
 plt.figure()
 fig, ax = plt.subplots(1)
-ax.imshow(input_image)
+ax.imshow(rgb_image)
 
 ### クラスによって描く色を決める
 cmap = plt.get_cmap('tab20b')       # tab20b はカラーマップの種類の1つ
