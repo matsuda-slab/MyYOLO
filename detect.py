@@ -24,6 +24,7 @@ parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -33,8 +34,11 @@ nms_thres    = args.nms_thres
 output_path  = args.output_image
 NUM_CLASSES  = args.num_classes
 name_file    = args.class_names
+NO_GPU       = args.nogpu
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if NO_GPU:
+    device = torch.device("cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
 # クラスファイルからクラス名を読み込む
@@ -52,6 +56,8 @@ input_image = cv2.imread(image_path)
 rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
 image = transforms.ToTensor()(input_image)
 
+image_load_t = time.time()
+
 image = resize_aspect_ratio(image)
 image = torch.from_numpy(image)
 image = image.to(device)
@@ -59,13 +65,19 @@ image = image.permute(2, 0, 1)
 image = image[[2,1,0],:,:]
 image = image.unsqueeze(0)
 
+image_convert_t = time.time()
+
 # 入力画像からモデルによる推論を実行する
 model.eval()
 output = model(image)       # 出力座標は 0~1 の値
 
+inference_t = time.time()
+
 # 推論結果に NMS をかける
 # ここの outputの出力座標 はすでに 0~416 にスケールされている
 output = non_max_suppression(output, conf_thres, nms_thres)
+
+nms_t = time.time()
 
 output = output[0]
 print("output.shape :", output.shape)
@@ -116,6 +128,12 @@ for x_min, y_min, x_max, y_max, conf, class_pred in output:
 
 end = time.time()
 print("elapsed time = %.4f sec" % (end - start))
+print("items :")
+print(" image_load : %.4f sec" % (image_load_t - start))
+print(" image_convert : %.4f sec" % (image_convert_t - image_load_t))
+print(" inference : %.4f sec" % (inference_t - image_convert_t))
+print(" nms : %.4f sec" % (nms_t - inference_t))
+print(" plot : %.4f sec" % (end - nms_t))
 
 # 描画する
 plt.axis("off")     # 軸をオフにする
