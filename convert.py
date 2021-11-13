@@ -15,6 +15,7 @@ def torch2onnx(model, output_path, input_shape):
             dummy_input,
             output_path,
             opset_version=11,
+            do_constant_folding=False,
             export_params=True,     # 学習したパラメータを格納する
             verbose=True
     )
