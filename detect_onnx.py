@@ -78,19 +78,24 @@ image_convert_t = time.time()
 
 # 入力画像からモデルによる推論を実行する
 output = tf_model.run(image)       # 出力座標は 0~1 の値
-print("output :", type(output[0]))
-output_torch = torch.from_numpy(output[0])
+print("output :", output[0][0].shape)
 
 inference_t = time.time()
 
 # 推論結果に NMS をかける
 # ここの outputの出力座標 はすでに 0~416 にスケールされている
-output = non_max_suppression(output_torch, conf_thres, nms_thres)
+#output_torch = torch.from_numpy(output[0])
+#output = non_max_suppression(output_torch, conf_thres, nms_thres)
+boxes  = output[0][0][:, 0:4]
+scores = output[0][0][:, 4]
+selected_indices = tf.image.non_max_suppression(boxes, scores, 200, iou_threshold=0.3, score_threshold=0.5)
 
 nms_t = time.time()
 
-output = output[0]
-print("output.shape :", output.shape)
+#output = output[0]
+nms_boxes = tf.gather(boxes, selected_indices)
+print("output.shape :", nms_boxes.shape)
+print(nms_boxes[0])
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]
@@ -107,45 +112,51 @@ unpad_w = 416 - pad_x
 
 # 追加した(paddingした)情報を考慮した, 元画像サイズへの復元
 # (ここの式よくわからない)
-output[:, 0] = ((output[:, 0] - pad_x // 2) / unpad_w) * orig_w
-output[:, 1] = ((output[:, 1] - pad_y // 2) / unpad_h) * orig_h
-output[:, 2] = ((output[:, 2] - pad_x // 2) / unpad_w) * orig_w
-output[:, 3] = ((output[:, 3] - pad_y // 2) / unpad_h) * orig_h
+unpad_boxes = np.zeros((nms_boxes.shape[0], 4))
+unpad_boxes[:, 0] = ((nms_boxes[:, 0] - pad_x // 2) / unpad_w) * orig_w
+unpad_boxes[:, 1] = ((nms_boxes[:, 1] - pad_y // 2) / unpad_h) * orig_h
+unpad_boxes[:, 2] = ((nms_boxes[:, 2] - pad_x // 2) / unpad_w) * orig_w
+unpad_boxes[:, 3] = ((nms_boxes[:, 3] - pad_y // 2) / unpad_h) * orig_h
 
 # 出力画像の下地として, 入力画像を読み込む
 #plt.figure()
 #fig, ax = plt.subplots(1)
 #ax.imshow(rgb_image)
-#
-#### クラスによって描く色を決める
+
+### クラスによって描く色を決める
 #cmap = plt.get_cmap('tab20b')       # tab20b はカラーマップの種類の1つ
 #colors = [cmap(i) for i in np.linspace(0, 1, NUM_CLASSES)]  # cmap をリスト化 (80分割)
 #bbox_colors = random.sample(colors, NUM_CLASSES)     # カラーをランダムに並び替え (任意)
-#
-#### 推論結果(x_min, y_min, x_max, y_max, confidence, class) をもとに
-#### 描画する矩形とラベルを作成する
-#for x_min, y_min, x_max, y_max, conf, class_pred in output:
-#    box_w = x_max - x_min
-#    box_h = y_max - y_min
-#
-#    color = bbox_colors[int(class_pred)]
-#    # patches を使うと, 図の上に図形をかける?
-#    bbox = patches.Rectangle((x_min, y_min), box_w, box_h, linewidth=2, edgecolor=color, facecolor='None')
-#    ax.add_patch(bbox)
-#
-#    # ラベル
-#    plt.text(x_min, y_min, s=class_names[int(class_pred)], color='white', verticalalignment='top', bbox={'color': color, 'pad':0})
-#
-#end = time.time()
-#print("elapsed time = %.4f sec" % (end - start))
-#print("items :")
-#print(" image_load : %.4f sec" % (image_load_t - start))
-#print(" image_convert : %.4f sec" % (image_convert_t - image_load_t))
-#print(" inference : %.4f sec" % (inference_t - image_convert_t))
-#print(" nms : %.4f sec" % (nms_t - inference_t))
-#print(" plot : %.4f sec" % (end - nms_t))
-#
-## 描画する
+
+### 推論結果(x_min, y_min, x_max, y_max, confidence, class) をもとに
+### 描画する矩形とラベルを作成する
+for x_min, y_min, x_max, y_max in unpad_boxes:
+    box_w = x_max - x_min
+    box_h = y_max - y_min
+
+    #color = bbox_colors[int(class_pred)]
+    ## patches を使うと, 図の上に図形をかける?
+    #bbox = patches.Rectangle((x_min, y_min), box_w, box_h, linewidth=2, edgecolor=color, facecolor='None')
+    #ax.add_patch(bbox)
+
+    ## ラベル
+    #plt.text(x_min, y_min, s=class_names[int(class_pred)], color='white', verticalalignment='top', bbox={'color': color, 'pad':0})
+    cv2.rectangle(input_image, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
+    cv2.putText(input_image, 'doll', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
+
+end = time.time()
+print("elapsed time = %.4f sec" % (end - start))
+print("items :")
+print(" image_load : %.4f sec" % (image_load_t - start))
+print(" image_convert : %.4f sec" % (image_convert_t - image_load_t))
+print(" inference : %.4f sec" % (inference_t - image_convert_t))
+print(" nms : %.4f sec" % (nms_t - inference_t))
+print(" plot : %.4f sec" % (end - nms_t))
+
+# 描画する
 #plt.axis("off")     # 軸をオフにする
 #plt.savefig(output_path)
 #plt.close()
+cv2.imshow('image', input_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

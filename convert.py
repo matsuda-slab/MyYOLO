@@ -23,8 +23,8 @@ def torch2onnx(model, output_path, input_shape):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', default="weights/yolo-tiny.pt")
-    parser.add_argument('--onnx_path', default="yolo-tiny.onnx")
+    parser.add_argument('--weights', default="yolo-tiny_doll.pt")
+    parser.add_argument('--onnx_path', default="yolo-tiny_doll.onnx")
     args = parser.parse_args()
 
     device = torch.device("cpu")
@@ -34,7 +34,7 @@ def main():
     INPUT_SHAPE  = (1, 3, INPUT_WIDTH, INPUT_HEIGHT)
     NUM_CLASSES  = 1
 
-    model     = load_model(None, device, num_classes=NUM_CLASSES)
+    model     = load_model(args.weights, device, num_classes=NUM_CLASSES)
     onnx_path = args.onnx_path
 
     print("Converting torch to onnx...")

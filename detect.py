@@ -81,6 +81,7 @@ nms_t = time.time()
 
 output = output[0]
 print("output.shape :", output.shape)
+print("output :", output[0])
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]
