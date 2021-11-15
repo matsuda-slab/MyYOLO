@@ -842,7 +842,7 @@ class YOLOLayer(nn.Module):
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
 
-def load_model(weights_path, device, num_classes=80, trans=False, finetune=False):
+def load_model(weights_path, device, num_classes=80, trans=False, finetune=False, use_sep=False):
     model = None
 
     if trans:
@@ -876,8 +876,7 @@ def load_model(weights_path, device, num_classes=80, trans=False, finetune=False
       return model, param_to_update
 
     elif finetune:
-      model = YOLO(80).to(device)
-      #model = YOLO_sep(80).to(device)
+      model = YOLO_sep(80).to(device) if use_sep else YOLO(80).to(device)
       print(model)
       if weights_path.endswith('weights'):
           model.load_darknet_weights(weights_path);
@@ -897,8 +896,7 @@ def load_model(weights_path, device, num_classes=80, trans=False, finetune=False
       return model
 
     else:
-      model = YOLO(num_classes).to(device)
-      #model = YOLO_sep(num_classes).to(device)
+      model = YOLO_sep(num_classes).to(device) if use_sep else YOLO(num_classes).to(device)
       if weights_path:
         if weights_path.endswith('weights'):
             model.load_darknet_weights(weights_path)

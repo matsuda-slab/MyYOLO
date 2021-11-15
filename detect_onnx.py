@@ -85,7 +85,6 @@ print("nms_boxes :", nms_boxes.shape)
 # <!> tf の nms() は, boxes が [y1, x1, y2, x2] を想定している
 #     output は, [x1, y1, x2, y2, conf, cls] の順番なので注意
 #boxes  = output[0][0][:, 0:4]
-#print("boxes :", boxes)
 #boxes[:, 0] = boxes[:, 1] / 416.0     # 正規化処理
 #boxes[:, 1] = boxes[:, 0] / 416.0
 #boxes[:, 2] = boxes[:, 3] / 416.0

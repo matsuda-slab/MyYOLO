@@ -16,6 +16,7 @@ from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
+parser.add_argument('--model', default=None)
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--lr', type=float, default=0.0001)
@@ -46,6 +47,7 @@ NUM_CLASSES  = args.num_classes
 IMG_SIZE     = 416
 TRANS        = args.trans   # 転移学習
 FINETUNE     = args.finetune   # ファインチューニング
+SEP          = True if args.model == "sep" else False
 
 iou_thres    = args.valid_iou_thres
 nms_thres    = args.valid_nms_thres
@@ -79,9 +81,9 @@ validation_dataloader = _create_validation_data_loader(
 
 # モデルの生成
 if TRANS:
-    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE)
+    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE, use_sep=SEP)
 else:
-    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE)
+    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE, use_sep=SEP)
 
 # 最適化アルゴリズム, 損失関数の定義
 if TRANS:
