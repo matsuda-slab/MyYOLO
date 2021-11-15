@@ -12,15 +12,10 @@ import os
 import sys
 import argparse
 import numpy as np
-#import matplotlib.pyplot as plt
-#import matplotlib.patches as patches
 import random
 #import torch.nn as nn
 #import torch.nn.functional as F
-#from torchvision import transforms
-#from PIL import Image
 import cv2
-#from model import YOLO, load_model
 from utils.utils import non_max_suppression
 import time
 
@@ -65,37 +60,45 @@ start = time.time();
 
 input_image = cv2.imread(image_path)
 rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-#image = transforms.ToTensor()(input_image)
 
 image_load_t = time.time()
-print("### input_image.shape :", input_image.shape)
+input_image = input_image[:, :, :] / 255.0
 image = resize_aspect_ratio(input_image, use_torch=False)      # by opencv
-image = image.transpose(2,0,1)
-image = image[np.newaxis, :, :, :]
+image = image.transpose(2, 0, 1)
+image = image[np.newaxis, [2,1,0], :, :]
+np.set_printoptions(edgeitems=2000)
 image = tf.cast(image, tf.float32)
-print("### image.shape :", image.shape)
 image_convert_t = time.time()
 
 # 入力画像からモデルによる推論を実行する
 output = tf_model.run(image)       # 出力座標は 0~1 の値
-print("output :", output[0][0].shape)
 
 inference_t = time.time()
 
 # 推論結果に NMS をかける
 # ここの outputの出力座標 はすでに 0~416 にスケールされている
-#output_torch = torch.from_numpy(output[0])
-#output = non_max_suppression(output_torch, conf_thres, nms_thres)
-boxes  = output[0][0][:, 0:4]
-scores = output[0][0][:, 4]
-selected_indices = tf.image.non_max_suppression(boxes, scores, 200, iou_threshold=0.3, score_threshold=0.5)
+output_torch = torch.from_numpy(output[0])
+output = non_max_suppression(output_torch, conf_thres, nms_thres)
+nms_boxes = output[0]
+print("nms_boxes :", nms_boxes.shape)
 
+# <!> tf の nms() は, boxes が [y1, x1, y2, x2] を想定している
+#     output は, [x1, y1, x2, y2, conf, cls] の順番なので注意
+#boxes  = output[0][0][:, 0:4]
+#print("boxes :", boxes)
+#boxes[:, 0] = boxes[:, 1] / 416.0     # 正規化処理
+#boxes[:, 1] = boxes[:, 0] / 416.0
+#boxes[:, 2] = boxes[:, 3] / 416.0
+#boxes[:, 3] = boxes[:, 2] / 416.0
+#boxes  = boxes[:, [1,0,3,2]]
+#scores = output[0][0][:, 4]
+#selected_indices = tf.image.non_max_suppression(boxes, scores, 200, iou_threshold=0.3, score_threshold=0.01)
+#
 nms_t = time.time()
-
-#output = output[0]
-nms_boxes = tf.gather(boxes, selected_indices)
-print("output.shape :", nms_boxes.shape)
-print(nms_boxes[0])
+#
+##output = output[0]
+#nms_boxes = tf.gather(boxes, selected_indices)
+#nms_boxes = nms_boxes * 416.0
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]

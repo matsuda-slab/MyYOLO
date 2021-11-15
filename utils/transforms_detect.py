@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 def resize_aspect_ratio(input_image, desired_size=416, use_torch=True):
     #image = cv2.imread(image_path)
@@ -15,7 +16,6 @@ def resize_aspect_ratio(input_image, desired_size=416, use_torch=True):
     ratio = float(desired_size) / max(old_size)
     new_size = tuple([int(x*ratio) for x in old_size])
 
-    print("#### new_size : ", new_size)
     image = cv2.resize(image, (new_size[1], new_size[0]))
 
     delta_w = desired_size - new_size[1]

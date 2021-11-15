@@ -54,7 +54,7 @@ start = time.time();
 
 input_image = cv2.imread(image_path)
 rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-image = transforms.ToTensor()(input_image)
+image = transforms.ToTensor()(input_image)      # ここで 0~1のfloatになる
 
 image_load_t = time.time()
 
@@ -80,8 +80,7 @@ output = non_max_suppression(output, conf_thres, nms_thres)
 nms_t = time.time()
 
 output = output[0]
-print("output.shape :", output.shape)
-print("output :", output[0])
+print("output :", output.shape)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]
