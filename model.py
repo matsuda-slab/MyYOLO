@@ -579,9 +579,14 @@ class YOLO_sep(nn.Module):
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
 
         # modules
+        #self.conv1  = nn.Sequential(OrderedDict([
+        #                            ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3, groups=3,   stride=1, padding=1, bias=0)),  # dw
+        #                            ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1, stride=1, padding=0, bias=0)),              # pw
+        #                            ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+        #                            ('relu', nn.LeakyReLU(0.1))
+        #                            ]))
         self.conv1  = nn.Sequential(OrderedDict([
-                                    ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3, groups=3,   stride=1, padding=1, bias=0)),  # dw
-                                    ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1, stride=1, padding=0, bias=0)),              # pw
+                                    ('conv', nn.Conv2d(   3,   16, kernel_size=3, stride=1, padding=1, bias=0)),              # 1層目のみ, 普通の3x3-conv
                                     ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
                                     ('relu', nn.LeakyReLU(0.1))
                                     ]))
@@ -591,6 +596,11 @@ class YOLO_sep(nn.Module):
                                     ('bn', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
                                     ('relu', nn.LeakyReLU(0.1))
                                     ]))
+        #self.conv2  = nn.Sequential(OrderedDict([
+        #                            ('conv_pw', nn.Conv2d(  16,   32, kernel_size=3, stride=1, padding=1, bias=0)),
+        #                            ('bn', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
+        #                            ('relu', nn.LeakyReLU(0.1))
+        #                            ]))
         self.conv3  = nn.Sequential(OrderedDict([
                                     ('conv_dw', nn.Conv2d(  32,   32, kernel_size=3, groups=32,  stride=1, padding=1, bias=0)),
                                     ('conv_pw', nn.Conv2d(  32,   64, kernel_size=1, stride=1, padding=0, bias=0)),
@@ -781,9 +791,9 @@ class YOLO_sep(nn.Module):
 
         last_t = time.time()
 
-        if not self.training:
-            print("step1 : %.4f, step2 : %.4f, step3 : %.4f" % 
-                    (step2_t - step1_t, step3_t - step2_t, last_t - step3_t))
+        #if not self.training:
+        #    print("step1 : %.4f, step2 : %.4f, step3 : %.4f" % 
+        #            (step2_t - step1_t, step3_t - step2_t, last_t - step3_t))
         # たぶんself.trainingは, model.train() にした時点でTrueになる
         return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
 
