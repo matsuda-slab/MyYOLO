@@ -7,18 +7,6 @@ import cv2
 from torch.utils.data import Dataset
 #from pycocotools.coco import COCO
 
-#import matplotlib
-#matplotlib.use('Agg')
-#import matplotlib.pyplot as plt
-#
-#def plot_graph(loss, rng, output_path, label="loss"):
-#    graph = plt.figure()
-#    plt.plot(range(rng), loss, label=label)
-#    plt.legend()
-#    plt.grid()
-#    #plt.show()
-#    graph.savefig(output_path)
-
 """
 # 推論結果と教師ラベルから, 損失計算
 def compute_loss(predictions, targets):

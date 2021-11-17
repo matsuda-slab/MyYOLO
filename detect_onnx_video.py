@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from torchvision import transforms
 #from PIL import Image
 import cv2
-from utils.utils import non_max_suppression
+from utils.utils_tf import non_max_suppression
 import time
 
 parser = argparse.ArgumentParser()

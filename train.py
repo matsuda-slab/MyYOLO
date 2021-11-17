@@ -106,6 +106,7 @@ print("Start Training\n")
 start = time.ctime()
 start_cnv = time.strptime(start)
 batches_done = 0
+lr = LR
 
 print(model)
 
@@ -126,25 +127,32 @@ for epoch in range(EPOCHS):
         loss.backward()
 
         ## 学習率の調整 及び optimizerの実行
-        if batches_done % SUBDIVISION == 0:         # SUBDIVISION = 2なら, 2回に1回学習率が変わる
-            lr = LR
-            if batches_done < BURN_IN:
-                lr *= (batches_done / BURN_IN)
-            else:
-                for threshold, value in lr_steps:
-                    if batches_done > threshold:
-                        lr *= value
+        #if batches_done % SUBDIVISION == 0:         # SUBDIVISION = 2なら, 2回に1回学習率が変わる
+        #    lr = LR
+        #    if batches_done < BURN_IN:
+        #        lr *= (batches_done / BURN_IN)
+        #    else:
+        #        for threshold, value in lr_steps:
+        #            if batches_done > threshold:
+        #                lr *= value
 
+        #    for g in optimizer.param_groups:
+        #        g['lr'] = lr
+
+        #    # optimizer を動作させる
+        #    optimizer.step()
+
+        #    optimizer.zero_grad()
+        if batches_done % 10 == 0:      # 10 epoch に 1回 学習率を0.1倍する
+            lr = lr * 0.1
             for g in optimizer.param_groups:
                 g['lr'] = lr
 
-            # optimizer を動作させる
-            optimizer.step()
+        optimizer.step()
+        optimizer.zero_grad()
 
-            optimizer.zero_grad()
-
-        if batches_done % 10 == 0:
-            print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
+        #if batches_done % 10 == 0:
+        print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
 
     # validationデータでの検証
     if not args.no_valid:
