@@ -90,8 +90,8 @@ else:
 if TRANS:
     optimizer = optim.Adam(param_to_update, lr=LR, weight_decay=DECAY)  # configに合わせて
 else:
-    #optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
-    optimizer = optim.Adam(model.parameters(), lr=LR)
+    optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=DECAY)  # configに合わせて
+    #optimizer = optim.Adam(model.parameters(), lr=LR)
 
 print("Model :", model.__class__.__name__);
 

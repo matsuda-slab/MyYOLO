@@ -887,7 +887,6 @@ def load_model(weights_path, device, num_classes=80, trans=False, finetune=False
 
     elif finetune:
       model = YOLO_sep(80).to(device) if use_sep else YOLO(80).to(device)
-      print(model)
       if weights_path.endswith('weights'):
           model.load_darknet_weights(weights_path);
       else:
