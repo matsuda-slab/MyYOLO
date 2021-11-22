@@ -20,6 +20,7 @@ parser.add_argument('--model', default=None)
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--lr', type=float, default=0.0001)
+parser.add_argument('--decay', type=float, default=0.0005)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 parser.add_argument('--output_model', default='yolo-tiny.pt')
 parser.add_argument('--num_classes', type=int, default=80)
@@ -31,6 +32,8 @@ parser.add_argument('--valid_conf_thres', type=float, default=0.1)
 parser.add_argument('--no_valid', action='store_true', default=False)
 parser.add_argument('--class_names', default='coco.names')
 parser.add_argument('--nosave', action='store_true', default=False)
+parser.add_argument('--restart', action='store_true', default=False)
+parser.add_argument('--dropout', action='store_true', default=False)
 args = parser.parse_args()
 
 DATA_ROOT    = args.data_root
@@ -39,7 +42,7 @@ EPOCHS       = args.epochs
 LR           = args.lr
 TRAIN_PATH   = DATA_ROOT + '/trainvalno5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '/train.txt'
 VALID_PATH   = DATA_ROOT + '/5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '/valid.txt'
-DECAY        = 0.0005
+DECAY        = args.decay
 SUBDIVISION  = 2
 BURN_IN      = 1000
 lr_steps     = [[400000, 0.1], [450000, 0.1]]
@@ -49,6 +52,8 @@ IMG_SIZE     = 416
 TRANS        = args.trans   # 転移学習
 FINETUNE     = args.finetune   # ファインチューニング
 SEP          = True if args.model == "sep" else False
+restart      = args.restart
+dropout      = args.dropout
 
 iou_thres    = args.valid_iou_thres
 nms_thres    = args.valid_nms_thres
@@ -82,9 +87,9 @@ validation_dataloader = _create_validation_data_loader(
 
 # モデルの生成
 if TRANS:
-    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE, use_sep=SEP)
+    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, restart=restart, finetune=FINETUNE, use_sep=SEP, dropout=dropout)
 else:
-    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE, use_sep=SEP)
+    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetune=FINETUNE, use_sep=SEP, dropout=dropout)
 
 # 最適化アルゴリズム, 損失関数の定義
 if TRANS:
@@ -230,6 +235,8 @@ if not args.nosave:
         f.write("loss (last) :" + str(losses[-1]) + "\n")
         f.write("anchors :" + str(model.anchors) + "\n")
         f.write("MAX mAP :" + str(max_map) + "\n")
+        f.write("restart :" + str(restart) + "\n")
+        f.write("dropout :" + str(dropout) + "\n")
         f.write("\n")
 
 # 学習結果(重みパラメータ)の保存

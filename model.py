@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.quantization import QuantStub, DeQuantStub
 from collections import OrderedDict
 import numpy as np
 import time
 
 # YOLOv3-tiny
 class YOLO(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, quant=False, dropout=False):
         super(YOLO, self).__init__()
         self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
         #self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
@@ -88,9 +89,15 @@ class YOLO(nn.Module):
         self.yolo1    = YOLOLayer(self.anchors[1], self.img_size, self.num_classes)     # あとでクラス作る
         self.yolo2    = YOLOLayer(self.anchors[0], self.img_size, self.num_classes)
 
+        self.en_dropout = dropout
+        self.dropout  = nn.Dropout2d(p=0.5)
+
         self.yolo_layers = [self.yolo1, self.yolo2]
 
-        # hyperparams
+        # 量子化器
+        self.enquant  = quant
+        self.quant    = QuantStub()
+        self.dequant  = DeQuantStub()
 
     def load_weights(self, weights_path, device):
         ckpt = torch.load(weights_path, map_location=device)
@@ -260,38 +267,60 @@ class YOLO(nn.Module):
 
         step1_t = time.time()
         # 特徴抽出部
+        if self.enquant: x = self.quant(x)
         x = self.conv1(x)
         x = self.pool1(x)
+        if self.en_dropout: x = self.dropout(x)
         x = self.conv2(x)
         x = self.pool2(x)
+        if self.en_dropout: x = self.dropout(x)
         x = self.conv3(x)
         x = self.pool3(x)
+        if self.en_dropout: x = self.dropout(x)
         x = self.conv4(x)
         x = self.pool4(x)
+        if self.en_dropout: x = self.dropout(x)
         x = self.conv5(x)
         l8_output = x       # あとのconcat用に出力を保管
         x = self.pool5(x)
+        if self.en_dropout: x = self.dropout(x)
         x = self.conv6(x)
+        if self.enquant:
+            x = self.dequant(x)
         x = self.zeropad(x)
+        if self.enquant:
+            x = self.quant(x)
         x = self.pool6(x)
+        if self.en_dropout: x = self.dropout(x)
 
         step2_t = time.time()
         # スケール大 検出部
         x = self.conv7(x)
+        if self.en_dropout: x = self.dropout(x)
         x1 = self.conv8(x)
+        if self.en_dropout: x1 = self.dropout(x1)
         x2 = x1
         x1 = self.conv9(x1)
+        if self.en_dropout: x1 = self.dropout(x1)
         x1 = self.conv10(x1)
+        if self.enquant:
+            x1 = self.dequant(x1)
         x1 = self.yolo1(x1)
         yolo_outputs.append(x1)
 
         step3_t = time.time()
         # スケール中 検出部
+        #if self.enquant:
+        #  x2 = self.quant(x2)
         x2 = self.conv11(x2)
+        if self.en_dropout: x2 = self.dropout(x2)
         x2 = self.upsample(x2)
         x2 = torch.cat([x2, l8_output], dim=1)        # チャネル数方向に特徴マップを結合
         x2 = self.conv12(x2)
+        if self.en_dropout: x2 = self.dropout(x2)
         x2 = self.conv13(x2)
+        if self.enquant:
+            x2 = self.dequant(x2)
         x2 = self.yolo2(x2)
         yolo_outputs.append(x2)
 
@@ -852,27 +881,33 @@ class YOLOLayer(nn.Module):
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
 
-def load_model(weights_path, device, num_classes=80, trans=False, finetune=False, use_sep=False):
+def load_model(weights_path, device, num_classes=80, trans=False, restart=False, finetune=False, use_sep=False, quant=False, qconvert=False, dropout=False):
     model = None
 
     if trans:
       param_to_update = []
-      update_param_names = ['conv10.weight', 'conv10.bias',
-                            'conv13.weight', 'conv13.bias']
+      update_param_names = ['conv10.conv.weight', 'conv10.conv.bias',
+                            'conv13.conv.weight', 'conv13.conv.bias']
 
-      model = YOLO(80).to(device)
+      if not restart:
+          model = YOLO(80, dropout).to(device)
+      else:
+          model = YOLO(num_classes, dropout).to(device)
+
       if weights_path.endswith('weights'):
           model.load_darknet_weights(weights_path);
       else:
-          model.load_weights(weights_path, device)
+          #model.load_weights(weights_path, device)
+          model.load_state_dict(torch.load(weights_path, map_location=device))
 
       # 最終層を置き換え
-      ylch = (5 + num_classes) * 3
-      model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-      model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-      model.yolo1       = YOLOLayer(model.anchors[1], model.img_size, num_classes)
-      model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
-      model.yolo_layers = [model.yolo1, model.yolo2]
+      if not restart:
+          ylch = (5 + num_classes) * 3
+          model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+          model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+          model.yolo1       = YOLOLayer(model.anchors[1], model.img_size, num_classes)
+          model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
+          model.yolo_layers = [model.yolo1, model.yolo2]
 
       # 置き換えた層以外のパラメータをフリーズ
       for (key, param) in model.named_parameters():
@@ -886,7 +921,7 @@ def load_model(weights_path, device, num_classes=80, trans=False, finetune=False
       return model, param_to_update
 
     elif finetune:
-      model = YOLO_sep(80).to(device) if use_sep else YOLO(80).to(device)
+      model = YOLO_sep(80).to(device) if use_sep else YOLO(80, dropout).to(device)
       if weights_path.endswith('weights'):
           model.load_darknet_weights(weights_path);
       else:
@@ -905,11 +940,19 @@ def load_model(weights_path, device, num_classes=80, trans=False, finetune=False
       return model
 
     else:
-      model = YOLO_sep(num_classes).to(device) if use_sep else YOLO(num_classes).to(device)
+      model = YOLO_sep(num_classes, dropout).to(device) if use_sep else YOLO(num_classes, quant, dropout).to(device)
+
+      if qconvert:
+          model.qconfig = torch.quantization.default_qconfig
+          torch.quantization.prepare(model, inplace=True)
+          torch.quantization.convert(model, inplace=True)
+
+      print(model)
       if weights_path:
         if weights_path.endswith('weights'):
             model.load_darknet_weights(weights_path)
         else:       # pt file
             model.load_state_dict(torch.load(weights_path, map_location=device))
 
+      print(model)
       return model

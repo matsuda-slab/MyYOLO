@@ -4,6 +4,8 @@ import os
 import sys
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
@@ -24,6 +26,7 @@ parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -40,6 +43,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if NO_GPU:
     device = torch.device("cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+if NO_GPU:
+    tensor_type = torch.FloatTensor
+if args.quant:
+    tensor_type = torch.ByteTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
@@ -47,7 +54,8 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, num_classes=NUM_CLASSES)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
+print(model.state_dict()['conv1.conv.weight'])
 
 # 画像パスから入力画像データに変換
 start = time.time();
@@ -138,4 +146,5 @@ print(" plot : %.4f sec" % (end - nms_t))
 # 描画する
 plt.axis("off")     # 軸をオフにする
 plt.savefig(output_path)
+plt.show()
 plt.close()
