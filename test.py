@@ -23,6 +23,8 @@ parser.add_argument('--iou_thres', type=float, default=0.5)
 parser.add_argument('--class_names', default='coco.names')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
+parser.add_argument('--quant', action='store_true', default=False)
+parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
 IMG_SIZE     = 416
@@ -38,7 +40,11 @@ class_file   = args.class_names
 NUM_CLASSES  = args.num_classes
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if args.nogpu:
+    device = torch.device("cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+if args.nogpu:
+    tensor_type = torch.FloatTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
@@ -49,7 +55,7 @@ with open(class_file, 'r') as f:
 #model = YOLO(num_classes=1)
 #model.load_state_dict(torch.load(weights_path, map_location=device))
 #model.to(device)
-model = load_model(weights_path, device, num_classes=NUM_CLASSES)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(
