@@ -40,11 +40,9 @@ name_file    = args.class_names
 NO_GPU       = args.nogpu
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-if NO_GPU:
+if NO_GPU or args.quant:
     device = torch.device("cpu")
-tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-if NO_GPU:
-    tensor_type = torch.FloatTensor
+tensor_type = torch.cuda.FloatTensor if (torch.cuda.is_available() and not NO_GPU) else torch.FloatTensor
 if args.quant:
     tensor_type = torch.ByteTensor
 
@@ -54,9 +52,7 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
-#model = torch.jit.load(weights_path)
-#print(model.state_dict()['conv1.conv.weight'])
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
 
 # 画像パスから入力画像データに変換
 start = time.time();
@@ -78,22 +74,6 @@ image_convert_t = time.time()
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
-#if args.quant:
-#    # fuse model
-#    module_to_fuse = [
-#            ['conv1.conv', 'conv1.bn'],
-#            ['conv2.conv', 'conv2.bn'],
-#            ['conv3.conv', 'conv3.bn'],
-#            ['conv4.conv', 'conv4.bn'],
-#            ['conv5.conv', 'conv5.bn'],
-#            ['conv6.conv', 'conv6.bn'],
-#            ['conv7.conv', 'conv7.bn'],
-#            ['conv8.conv', 'conv8.bn'],
-#            ['conv9.conv', 'conv9.bn'],
-#            ['conv11.conv', 'conv11.bn'],
-#            ['conv12.conv', 'conv12.bn']
-#    ]
-#    model = torch.quantization.fuse_modules(model, module_to_fuse)
 
 output = model(image)       # 出力座標は 0~1 の値
 

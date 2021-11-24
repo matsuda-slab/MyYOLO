@@ -21,16 +21,6 @@ def detect(model, device, tensor_type, data_path, batch_size=8, class_file='coco
     conf_thres  = 0.1
     nms_thres   = 0.4
     iou_thres   = 0.5
-    #input_image = cv2.imread(image_path)
-    #rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-    #image = transforms.ToTensor()(input_image)      # ここで 0~1のfloatになる
-
-    #image = resize_aspect_ratio(image)
-    #image = torch.from_numpy(image)
-    #image = image.to(device)
-    #image = image.permute(2, 0, 1)
-    #image = image[[2,1,0],:,:]
-    #image = image.unsqueeze(0)
     class_names = []
     with open(class_file, 'r') as f:
         class_names = f.read().splitlines()
@@ -92,10 +82,11 @@ def main():
 
     device       = torch.device('cpu')
 
-    qmodel = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=True, qconvert=False)
+    qmodel = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=True)
     qmodel.eval()
 
-    # fuse model
+    # fuse model. Conv と BN を fuse する. fuse しないと, なぜかBNのパラメータが
+    # All 1 or All 0 になる
     module_to_fuse = [
             [ 'conv1.conv',  'conv1.bn'],
             [ 'conv2.conv',  'conv2.bn'],
@@ -115,50 +106,29 @@ def main():
     #print("qconfig :", qmodel.qconfig)
     torch.quantization.prepare(qmodel, inplace=True)
 
-    # 適当な入力画像
-    #image_path = 'images/doll_light_1.png'
+    # 入力バッチ (データセットのテスト画像)
     testdata_path = args.data_root + '/5k.txt' if 'COCO' in args.data_root else args.data_root + '/test.txt'
 
     # forward を回して, 量子化に必要な scale と zero-point を決定する
-    #detect(qmodel, device, image_path)
+    print("Before quantization")
     detect(qmodel, device, torch.FloatTensor, testdata_path, class_file='contest_2.names')
 
-    #print("param:", qmodel.state_dict()['conv1.conv.weight'])
+    # 量子化モデルに変換
     torch.quantization.convert(qmodel, inplace=True)
-    #print("param:", qmodel.state_dict()['conv1.conv.weight'])
+    #print(qmodel)
 
-    #print("qmodel :", qmodel)
+    # 精度の確認
+    print("After quantization")
     detect(qmodel, device, torch.FloatTensor, testdata_path, class_file='contest_2.names')
 
     inputfilename, ext = os.path.splitext(weights_path)
-    outputfilename = inputfilename + "_quant" + ext
-    torch.save(qmodel.state_dict(), outputfilename)
+    outputfilename = inputfilename + "_quant_jit" + ext
+    #torch.save(qmodel.state_dict(), outputfilename)
 
+    # torchscript としてモデルを保存. torch.saveで保存すると, キーエラーになる
     dummy_input = torch.rand(1, 3, 416, 416)
     jit_model = torch.jit.trace(qmodel, dummy_input)
-    jit_model.save("yolov3-tiny_doll_light_jit.pt")
-
-    print("jit_model keys :", jit_model.state_dict().keys())
-    #torch.jit.save(torch.jit.script(qmodel), outputfilename)
-
-    #model = YOLO(NUM_CLASSES, quant=True).to(device)
-    #module_to_fuse = [
-    #        ['conv1.conv', 'conv1.bn'],
-    #        ['conv2.conv', 'conv2.bn'],
-    #        ['conv3.conv', 'conv3.bn'],
-    #        ['conv4.conv', 'conv4.bn'],
-    #        ['conv5.conv', 'conv5.bn'],
-    #        ['conv6.conv', 'conv6.bn'],
-    #        ['conv7.conv', 'conv7.bn'],
-    #        ['conv8.conv', 'conv8.bn'],
-    #        ['conv9.conv', 'conv9.bn'],
-    #        ['conv11.conv', 'conv11.bn'],
-    #        ['conv12.conv', 'conv12.bn']
-    #]
-    #model = torch.quantization.fuse_modules(model, module_to_fuse)
-    #print("model keys:", model.state_dict().keys())
-    #model.load_state_dict(qmodel.state_dict())
-    model = torch.jit.load("yolov3-tiny_doll_light_jit.pt")
+    jit_model.save(outputfilename)
 
 if __name__ == "__main__":
     main()
