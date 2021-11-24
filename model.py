@@ -265,7 +265,7 @@ class YOLO(nn.Module):
     def forward(self, x):
         yolo_outputs = []
 
-        step1_t = time.time()
+        #step1_t = time.time()
         # 特徴抽出部
         if self.enquant: x = self.quant(x)
         x = self.conv1(x)
@@ -293,7 +293,7 @@ class YOLO(nn.Module):
         x = self.pool6(x)
         if self.en_dropout: x = self.dropout(x)
 
-        step2_t = time.time()
+        #step2_t = time.time()
         # スケール大 検出部
         x = self.conv7(x)
         if self.en_dropout: x = self.dropout(x)
@@ -308,7 +308,7 @@ class YOLO(nn.Module):
         x1 = self.yolo1(x1)
         yolo_outputs.append(x1)
 
-        step3_t = time.time()
+        #step3_t = time.time()
         # スケール中 検出部
         #if self.enquant:
         #  x2 = self.quant(x2)
@@ -324,7 +324,7 @@ class YOLO(nn.Module):
         x2 = self.yolo2(x2)
         yolo_outputs.append(x2)
 
-        last_t = time.time()
+        #last_t = time.time()
 
         #if not self.training:
         #    print("step1 : %.4f, step2 : %.4f, step3 : %.4f" % 
@@ -824,7 +824,9 @@ class YOLO_sep(nn.Module):
         #    print("step1 : %.4f, step2 : %.4f, step3 : %.4f" % 
         #            (step2_t - step1_t, step3_t - step2_t, last_t - step3_t))
         # たぶんself.trainingは, model.train() にした時点でTrueになる
-        return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
+        if self.training:
+            return yolo_outputs
+        return torch.cat(yolo_outputs, 1)
 
 class YOLOLayer(nn.Module):
     def __init__(self, anchors, img_size, num_classes=80):
@@ -833,7 +835,7 @@ class YOLOLayer(nn.Module):
         self.num_anchors = len(anchors)
         self.num_classes = num_classes
         self.img_size    = img_size             # 416
-        self.stride      = None
+        self.stride      = 0
 
     def forward(self, x):
         # ストライドは, 画像サイズをグリッドの分割数で割った値.
@@ -947,6 +949,22 @@ def load_model(weights_path, device, num_classes=80, trans=False, restart=False,
           torch.quantization.prepare(model, inplace=True)
           torch.quantization.convert(model, inplace=True)
 
+      #if quant:
+      #    # fuse model
+      #    module_to_fuse = [
+      #            ['conv1.conv', 'conv1.bn'],
+      #            ['conv2.conv', 'conv2.bn'],
+      #            ['conv3.conv', 'conv3.bn'],
+      #            ['conv4.conv', 'conv4.bn'],
+      #            ['conv5.conv', 'conv5.bn'],
+      #            ['conv6.conv', 'conv6.bn'],
+      #            ['conv7.conv', 'conv7.bn'],
+      #            ['conv8.conv', 'conv8.bn'],
+      #            ['conv9.conv', 'conv9.bn'],
+      #            ['conv11.conv', 'conv11.bn'],
+      #            ['conv12.conv', 'conv12.bn']
+      #    ]
+      #    model = torch.quantization.fuse_modules(model, module_to_fuse)
       print(model)
       if weights_path:
         if weights_path.endswith('weights'):
@@ -954,5 +972,5 @@ def load_model(weights_path, device, num_classes=80, trans=False, restart=False,
         else:       # pt file
             model.load_state_dict(torch.load(weights_path, map_location=device))
 
-      print(model)
+      #print(model)
       return model

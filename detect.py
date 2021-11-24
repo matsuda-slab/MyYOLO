@@ -55,7 +55,8 @@ with open(name_file, 'r') as f:
 
 # モデルファイルからモデルを読み込む
 model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
-print(model.state_dict()['conv1.conv.weight'])
+#model = torch.jit.load(weights_path)
+#print(model.state_dict()['conv1.conv.weight'])
 
 # 画像パスから入力画像データに変換
 start = time.time();
@@ -77,6 +78,23 @@ image_convert_t = time.time()
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
+#if args.quant:
+#    # fuse model
+#    module_to_fuse = [
+#            ['conv1.conv', 'conv1.bn'],
+#            ['conv2.conv', 'conv2.bn'],
+#            ['conv3.conv', 'conv3.bn'],
+#            ['conv4.conv', 'conv4.bn'],
+#            ['conv5.conv', 'conv5.bn'],
+#            ['conv6.conv', 'conv6.bn'],
+#            ['conv7.conv', 'conv7.bn'],
+#            ['conv8.conv', 'conv8.bn'],
+#            ['conv9.conv', 'conv9.bn'],
+#            ['conv11.conv', 'conv11.bn'],
+#            ['conv12.conv', 'conv12.bn']
+#    ]
+#    model = torch.quantization.fuse_modules(model, module_to_fuse)
+
 output = model(image)       # 出力座標は 0~1 の値
 
 inference_t = time.time()

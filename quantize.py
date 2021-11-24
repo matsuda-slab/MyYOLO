@@ -4,7 +4,7 @@
 
 import os
 import torch
-from model import load_model
+from model import YOLO, load_model
 import argparse
 from torchvision import transforms
 from utils.datasets import _create_validation_data_loader
@@ -95,8 +95,24 @@ def main():
     qmodel = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=True, qconvert=False)
     qmodel.eval()
 
+    # fuse model
+    module_to_fuse = [
+            [ 'conv1.conv',  'conv1.bn'],
+            [ 'conv2.conv',  'conv2.bn'],
+            [ 'conv3.conv',  'conv3.bn'],
+            [ 'conv4.conv',  'conv4.bn'],
+            [ 'conv5.conv',  'conv5.bn'],
+            [ 'conv6.conv',  'conv6.bn'],
+            [ 'conv7.conv',  'conv7.bn'],
+            [ 'conv8.conv',  'conv8.bn'],
+            [ 'conv9.conv',  'conv9.bn'],
+            ['conv11.conv', 'conv11.bn'],
+            ['conv12.conv', 'conv12.bn']
+    ]
+    qmodel = torch.quantization.fuse_modules(qmodel, module_to_fuse)
+
     qmodel.qconfig = torch.quantization.default_qconfig
-    print("qconfig :", qmodel.qconfig)
+    #print("qconfig :", qmodel.qconfig)
     torch.quantization.prepare(qmodel, inplace=True)
 
     # 適当な入力画像
@@ -111,12 +127,38 @@ def main():
     torch.quantization.convert(qmodel, inplace=True)
     #print("param:", qmodel.state_dict()['conv1.conv.weight'])
 
-    print("qmodel :", qmodel)
+    #print("qmodel :", qmodel)
     detect(qmodel, device, torch.FloatTensor, testdata_path, class_file='contest_2.names')
 
     inputfilename, ext = os.path.splitext(weights_path)
     outputfilename = inputfilename + "_quant" + ext
     torch.save(qmodel.state_dict(), outputfilename)
+
+    dummy_input = torch.rand(1, 3, 416, 416)
+    jit_model = torch.jit.trace(qmodel, dummy_input)
+    jit_model.save("yolov3-tiny_doll_light_jit.pt")
+
+    print("jit_model keys :", jit_model.state_dict().keys())
+    #torch.jit.save(torch.jit.script(qmodel), outputfilename)
+
+    #model = YOLO(NUM_CLASSES, quant=True).to(device)
+    #module_to_fuse = [
+    #        ['conv1.conv', 'conv1.bn'],
+    #        ['conv2.conv', 'conv2.bn'],
+    #        ['conv3.conv', 'conv3.bn'],
+    #        ['conv4.conv', 'conv4.bn'],
+    #        ['conv5.conv', 'conv5.bn'],
+    #        ['conv6.conv', 'conv6.bn'],
+    #        ['conv7.conv', 'conv7.bn'],
+    #        ['conv8.conv', 'conv8.bn'],
+    #        ['conv9.conv', 'conv9.bn'],
+    #        ['conv11.conv', 'conv11.bn'],
+    #        ['conv12.conv', 'conv12.bn']
+    #]
+    #model = torch.quantization.fuse_modules(model, module_to_fuse)
+    #print("model keys:", model.state_dict().keys())
+    #model.load_state_dict(qmodel.state_dict())
+    model = torch.jit.load("yolov3-tiny_doll_light_jit.pt")
 
 if __name__ == "__main__":
     main()
