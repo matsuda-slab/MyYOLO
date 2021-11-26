@@ -13,6 +13,7 @@ from torchvision import transforms
 from PIL import Image
 from model import YOLO, load_model
 from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
+import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/yolov3-tiny.weights')
@@ -69,7 +70,7 @@ model.eval()
 
 labels         = []
 sample_metrics = []
-for _, images, targets in dataloader:
+for _, images, targets in tqdm.tqdm(dataloader):
     # ラベル(番号)をリスト化している (あとで必要なのだろう)
     labels += targets[:, 1].tolist()
 

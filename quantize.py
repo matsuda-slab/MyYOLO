@@ -12,6 +12,7 @@ import cv2
 from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
 from utils.transforms_detect import resize_aspect_ratio
 import numpy as np
+import tqdm
 
 CONF_THRES = 0.1
 NMS_THRES  = 0.4
@@ -36,7 +37,7 @@ def detect(model, device, tensor_type, data_path, batch_size=8, class_file='coco
 
     labels         = []
     sample_metrics = []
-    for _, images, targets in dataloader:
+    for _, images, targets in tqdm.tqdm(dataloader):
         # ラベル(番号)をリスト化している (あとで必要なのだろう)
         labels += targets[:, 1].tolist()
 
@@ -75,10 +76,12 @@ def main():
     parser.add_argument('--weights', default='yolo-tiny.pt')
     parser.add_argument('--data_root', default='/home/matsuda/datasets/contest_doll_light')
     parser.add_argument('--num_classes', type=int, default=80)
+    parser.add_argument('--class_names', default='coco.names')
     args = parser.parse_args()
 
     weights_path = args.weights
     NUM_CLASSES  = args.num_classes
+    name_file    = args.class_names
 
     device       = torch.device('cpu')
 
@@ -111,7 +114,7 @@ def main():
 
     # forward を回して, 量子化に必要な scale と zero-point を決定する
     print("Before quantization")
-    detect(qmodel, device, torch.FloatTensor, testdata_path, class_file='contest_2.names')
+    detect(qmodel, device, torch.FloatTensor, testdata_path, class_file=name_file)
 
     # 量子化モデルに変換
     torch.quantization.convert(qmodel, inplace=True)
@@ -119,7 +122,7 @@ def main():
 
     # 精度の確認
     print("After quantization")
-    detect(qmodel, device, torch.FloatTensor, testdata_path, class_file='contest_2.names')
+    detect(qmodel, device, torch.FloatTensor, testdata_path, class_file=name_file)
 
     inputfilename, ext = os.path.splitext(weights_path)
     outputfilename = inputfilename + "_quant_jit" + ext
