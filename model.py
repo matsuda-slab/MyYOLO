@@ -947,12 +947,12 @@ def load_model(weights_path, device, num_classes=80, trans=False, restart=False,
           torch.quantization.prepare(model, inplace=True)
           torch.quantization.convert(model, inplace=True)
 
-      print(model)
+      print(model.state_dict().keys())
       if weights_path:
         if weights_path.endswith('weights'):
             model.load_darknet_weights(weights_path)
         else:       # pt file
             model.load_state_dict(torch.load(weights_path, map_location=device))
 
-      print(model)
+      #print(model)
       return model

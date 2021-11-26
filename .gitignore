@@ -15,3 +15,5 @@ utils/git
 *.pb
 *.tar.gz
 *.pt
+params_debug/
+all_params_yolo-tiny_doll.txt
