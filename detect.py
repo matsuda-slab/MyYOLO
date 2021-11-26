@@ -40,11 +40,9 @@ name_file    = args.class_names
 NO_GPU       = args.nogpu
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-if NO_GPU:
+if NO_GPU or args.quant:
     device = torch.device("cpu")
-tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-if NO_GPU:
-    tensor_type = torch.FloatTensor
+tensor_type = torch.cuda.FloatTensor if (torch.cuda.is_available() and not NO_GPU) else torch.FloatTensor
 if args.quant:
     tensor_type = torch.ByteTensor
 
@@ -54,8 +52,7 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
-print(model.state_dict()['conv1.conv.weight'])
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
 
 # 画像パスから入力画像データに変換
 start = time.time();
@@ -77,6 +74,7 @@ image_convert_t = time.time()
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
+
 output = model(image)       # 出力座標は 0~1 の値
 
 inference_t = time.time()

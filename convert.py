@@ -26,7 +26,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default=None)
     parser.add_argument('--weights', default="yolo-tiny_doll.pt")
-    parser.add_argument('--onnx_path', default="yolo-tiny_doll.onnx")
     args = parser.parse_args()
 
     sep = True if args.model == 'sep' else False
@@ -37,8 +36,9 @@ def main():
     INPUT_SHAPE  = (1, 3, INPUT_WIDTH, INPUT_HEIGHT)
     NUM_CLASSES  = 1
 
-    model     = load_model(args.weights, device, num_classes=NUM_CLASSES, use_sep=sep)
-    onnx_path = args.onnx_path
+    model     = load_model(args.weights, device, num_classes=NUM_CLASSES)
+    input_path, _ = os.path.splitext(weights_path)
+    onnx_path     = input_path + '.onnx'
 
     print("Converting torch to onnx...")
     torch2onnx(model, onnx_path, INPUT_SHAPE)

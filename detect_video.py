@@ -15,24 +15,28 @@ from utils.utils import non_max_suppression
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
-parser.add_argument('--image', default='images/dog.jpg')
+parser.add_argument('--video', default='images/car.mp4')
 parser.add_argument('--conf_thres', type=float, default=0.5)
 parser.add_argument('--nms_thres', type=float, default=0.4)
-parser.add_argument('--output_image', default='output.jpg')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--quant', action='store_true', default=False)
+parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
-image_path   = args.image
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
-output_path  = args.output_image
 NUM_CLASSES  = args.num_classes
 name_file    = args.class_names
+NO_GPU       = args.nogpu
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+if NO_GPU or args.quant:
+    device = torch.device("cpu")
+tensor_type = torch.cuda.FloatTensor if (torch.cuda.is_available() and not NO_GPU) else torch.FloatTensor
+if args.quant:
+    tensor_type = torch.ByteTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
@@ -40,10 +44,10 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, num_classes=NUM_CLASSES)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
 
 # 動画の読み込み
-cap = cv2.VideoCapture("images/car.mp4")
+cap = cv2.VideoCapture(args.video)
 if not cap.isOpened():
     print("Can not open video\n")
     sys.exit(1)
@@ -95,7 +99,7 @@ while(cap.isOpened()):
         cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
         cv2.putText(frame, 'car', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
 
-    cv2.resize(frame, fx=0.5, fy=0.5)
+    #cv2.resize(frame, fx=0.5, fy=0.5)
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
