@@ -13,7 +13,7 @@ args = parser.parse_args()
 
 weights_path = args.weights
 NUM_CLASSES  = args.num_classes
-quant = True if 'quant' in weights_path else False
+quant        = True if 'quant' in weights_path else False
 
 # load model
 device = torch.device("cpu")
@@ -28,9 +28,9 @@ for key in model.state_dict().keys():
     if a is None:
         continue
     if 'quant' in weights_path:
-        output_path = os.path.join('params_debug', 'quant', str(key) + '.txt')
+        output_path = os.path.join('debug_params', 'quant', str(key) + '.txt')
     else:
-        output_path = os.path.join('params_debug', 'no-quant', str(key) + '.txt')
+        output_path = os.path.join('debug_params', 'no-quant', str(key) + '.txt')
     with open(output_path, "w") as f:
         if (0 < a.dim()):
             for aa in a:
