@@ -163,7 +163,7 @@ for epoch in range(EPOCHS):
         #optimizer.zero_grad()
 
         #if batches_done % 10 == 0:
-        print("[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss))
+        print("\r[%3d][%d] Epoch / [%4d][%d] : loss = %.4f" % (epoch, EPOCHS, ite, len(dataloader), loss), end="")
 
     #if epoch % 10 == 9:      # 10 epoch に 1回 学習率を0.1倍する
     #    lr = lr * 0.1

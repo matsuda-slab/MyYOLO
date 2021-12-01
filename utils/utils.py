@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 #from pycocotools.coco import COCO
 
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def plot_graph(loss, rng, output_path, label="loss"):
