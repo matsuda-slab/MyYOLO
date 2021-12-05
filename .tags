@@ -1,0 +1,268 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/Users/masatomo/work/MyYOLO/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	/6df549ab/
+AP	test.py	/^precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+AP	train.py	/^        precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+AUGMENTATION_TRANSFORMS	utils/augmentations.py	/^AUGMENTATION_TRANSFORMS = transforms.Compose([$/;"	v
+AbsoluteLabels	utils/transforms.py	/^class AbsoluteLabels(object):$/;"	c
+BATCH_SIZE	test.py	/^BATCH_SIZE   = args.batch_size$/;"	v
+BATCH_SIZE	train.py	/^BATCH_SIZE   = args.batch_size$/;"	v
+BCEBlurWithLogitsLoss	utils/loss.py	/^class BCEBlurWithLogitsLoss(nn.Module):$/;"	c
+BURN_IN	train.py	/^BURN_IN      = 1000$/;"	v
+DATA_ROOT	test.py	/^DATA_ROOT    = args.data_root$/;"	v
+DATA_ROOT	train.py	/^DATA_ROOT    = args.data_root$/;"	v
+DECAY	train.py	/^DECAY        = 0.0005$/;"	v
+DEFAULT_TRANSFORMS	utils/transforms.py	/^DEFAULT_TRANSFORMS = transforms.Compose([$/;"	v
+DefaultAug	utils/augmentations.py	/^class DefaultAug(ImgAug):$/;"	c
+EPOCHS	train.py	/^EPOCHS       = args.epochs$/;"	v
+F	detect.py	/^import torch.nn.functional as F$/;"	I	nameref:module:torch.nn.functional
+F	model.py	/^import torch.nn.functional as F$/;"	I	nameref:module:torch.nn.functional
+F	test.py	/^import torch.nn.functional as F$/;"	I	nameref:module:torch.nn.functional
+F	utils/datasets.py	/^import torch.nn.functional as F$/;"	I	nameref:module:torch.nn.functional
+F	utils/transforms.py	/^import torch.nn.functional as F$/;"	I	nameref:module:torch.nn.functional
+FINETUNE	train.py	/^FINETUNE     = args.finetune   # ファインチューニング$/;"	v
+FocalLoss	utils/loss.py	/^class FocalLoss(nn.Module):$/;"	c
+IMG_SIZE	test.py	/^IMG_SIZE     = 416$/;"	v
+IMG_SIZE	train.py	/^IMG_SIZE     = 416$/;"	v
+ImgAug	utils/transforms.py	/^class ImgAug(object):$/;"	c
+LR	train.py	/^LR           = args.lr$/;"	v
+ListDataset	utils/datasets.py	/^class ListDataset(Dataset):$/;"	c
+MyDataset	utils/datasets.py	/^class MyDataset(Dataset):$/;"	c
+NUM_CLASSES	detect.py	/^NUM_CLASSES  = args.num_classes$/;"	v
+NUM_CLASSES	test.py	/^NUM_CLASSES  = args.num_classes$/;"	v
+NUM_CLASSES	train.py	/^NUM_CLASSES  = args.num_classes$/;"	v
+PadSquare	utils/transforms.py	/^class PadSquare(ImgAug):$/;"	c
+QFocalLoss	utils/loss.py	/^class QFocalLoss(nn.Module):$/;"	c
+RelativeLabels	utils/transforms.py	/^class RelativeLabels(object):$/;"	c
+Resize	utils/transforms.py	/^class Resize(object):$/;"	c
+SUBDIVISION	train.py	/^SUBDIVISION  = 2$/;"	v
+StrongAug	utils/augmentations.py	/^class StrongAug(ImgAug):$/;"	c
+TP	test.py	/^TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]$/;"	v
+TP	train.py	/^        TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))/;"	v
+TRAIN_PATH	train.py	/^TRAIN_PATH   = DATA_ROOT + '\/trainvalno5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '\/train/;"	v
+TRANS	train.py	/^TRANS        = args.trans   # 転移学習$/;"	v
+ToTensor	utils/transforms.py	/^class ToTensor(object):$/;"	c
+VALID_PATH	test.py	/^VALID_PATH   = DATA_ROOT + '\/5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '\/test.txt'$/;"	v
+VALID_PATH	train.py	/^VALID_PATH   = DATA_ROOT + '\/5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '\/valid.txt'$/;"	v
+YOLO	model.py	/^class YOLO(nn.Module):$/;"	c
+YOLOLayer	model.py	/^class YOLOLayer(nn.Module):$/;"	c
+_	train.py	/^        loss, _ = compute_loss(outputs, target, model)$/;"	v
+__call__	utils/transforms.py	/^    def __call__(self, data):$/;"	m	class:AbsoluteLabels
+__call__	utils/transforms.py	/^    def __call__(self, data):$/;"	m	class:ImgAug
+__call__	utils/transforms.py	/^    def __call__(self, data):$/;"	m	class:RelativeLabels
+__call__	utils/transforms.py	/^    def __call__(self, data):$/;"	m	class:Resize
+__call__	utils/transforms.py	/^    def __call__(self, data):$/;"	m	class:ToTensor
+__getitem__	utils/datasets.py	/^    def __getitem__(self, index):$/;"	m	class:ListDataset
+__getitem__	utils/datasets.py	/^    def __getitem__(self, index):$/;"	m	class:MyDataset
+__init__	model.py	/^    def __init__(self, anchors, img_size, num_classes=80):$/;"	m	class:YOLOLayer
+__init__	model.py	/^    def __init__(self, num_classes):$/;"	m	class:YOLO
+__init__	utils/augmentations.py	/^    def __init__(self, ):$/;"	m	class:DefaultAug
+__init__	utils/augmentations.py	/^    def __init__(self, ):$/;"	m	class:StrongAug
+__init__	utils/datasets.py	/^    def __init__(self, data_root, transform=None, target_transform=None):$/;"	m	class:MyDataset
+__init__	utils/datasets.py	/^    def __init__(self, list_path, img_size=416, multiscale=True, transform=None):$/;"	m	class:ListDataset
+__init__	utils/loss.py	/^    def __init__(self, alpha=0.05):$/;"	m	class:BCEBlurWithLogitsLoss
+__init__	utils/loss.py	/^    def __init__(self, loss_fcn, gamma=1.5, alpha=0.25):$/;"	m	class:FocalLoss
+__init__	utils/loss.py	/^    def __init__(self, loss_fcn, gamma=1.5, alpha=0.25):$/;"	m	class:QFocalLoss
+__init__	utils/transforms.py	/^    def __init__(self, ):$/;"	m	class:AbsoluteLabels
+__init__	utils/transforms.py	/^    def __init__(self, ):$/;"	m	class:PadSquare
+__init__	utils/transforms.py	/^    def __init__(self, ):$/;"	m	class:RelativeLabels
+__init__	utils/transforms.py	/^    def __init__(self, ):$/;"	m	class:ToTensor
+__init__	utils/transforms.py	/^    def __init__(self, augmentations=[]):$/;"	m	class:ImgAug
+__init__	utils/transforms.py	/^    def __init__(self, size):$/;"	m	class:Resize
+__len__	utils/datasets.py	/^    def __len__(self):$/;"	m	class:ListDataset
+__len__	utils/datasets.py	/^    def __len__(self):$/;"	m	class:MyDataset
+_create_data_loader	utils/datasets.py	/^def _create_data_loader(img_path, batch_size, img_size, n_cpu=8, multiscale_training=False):$/;"	f
+_create_validation_data_loader	utils/datasets.py	/^def _create_validation_data_loader(img_path, batch_size, img_size, n_cpu=8):$/;"	f
+ap_class	test.py	/^precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+ap_class	train.py	/^        precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+ap_per_class	utils/utils.py	/^def ap_per_class(tp, conf, pred_cls, target_cls):$/;"	f
+ap_table	test.py	/^ap_table = [['Index', 'Class', 'AP']]$/;"	v
+args	detect.py	/^args = parser.parse_args()$/;"	v
+args	test.py	/^args = parser.parse_args()$/;"	v
+args	train.py	/^args = parser.parse_args()$/;"	v
+ax	detect.py	/^fig, ax = plt.subplots(1)$/;"	v
+batch_iter	dataset_test.py	/^batch_iter = iter(dataloader)$/;"	v
+batches_done	train.py	/^        batches_done = len(dataloader) * epoch + ite$/;"	v
+batches_done	train.py	/^batches_done = 0$/;"	v
+bbox	detect.py	/^    bbox = patches.Rectangle((x_min, y_min), box_w, box_h, linewidth=2, edgecolor=color, facecol/;"	v
+bbox_colors	detect.py	/^bbox_colors = random.sample(colors, NUM_CLASSES)     # カラーをランダムに並び替え (/;"	v
+bbox_iou	utils/loss.py	/^def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=1e-9):$/;"	f
+bbox_iou	utils/utils.py	/^def bbox_iou(box1, box2, x1y1x2y2=True):$/;"	f
+bbox_wh_iou	utils/utils.py	/^def bbox_wh_iou(wh1, wh2):$/;"	f
+box_area	utils/utils.py	/^    def box_area(box):$/;"	f	function:box_iou	file:
+box_h	detect.py	/^    box_h = y_max - y_min$/;"	v
+box_iou	utils/utils.py	/^def box_iou(box1, box2):$/;"	f
+box_w	detect.py	/^    box_w = x_max - x_min$/;"	v
+build_targets	utils/loss.py	/^def build_targets(p, targets, model):$/;"	f
+class_file	test.py	/^class_file   = args.class_names$/;"	v
+class_file	train.py	/^class_file = args.class_names$/;"	v
+class_names	detect.py	/^    class_names = f.read().splitlines()$/;"	v
+class_names	detect.py	/^class_names = []$/;"	v
+class_names	test.py	/^    class_names = f.read().splitlines()$/;"	v
+class_names	test.py	/^class_names = []$/;"	v
+class_names	train.py	/^    class_names = f.read().splitlines()$/;"	v
+class_names	train.py	/^class_names = []$/;"	v
+cmap	detect.py	/^cmap = plt.get_cmap('tab20b')       # tab20b はカラーマップの種類の1つ$/;"	v
+collate_fn	utils/datasets.py	/^    def collate_fn(self, batch):$/;"	m	class:ListDataset
+color	detect.py	/^    color = bbox_colors[int(class_pred)]$/;"	v
+colors	detect.py	/^colors = [cmap(i) for i in np.linspace(0, 1, NUM_CLASSES)]  # cmap をリスト化 (80分割)$/;"	v
+compute_ap	utils/utils.py	/^def compute_ap(recall, precision):$/;"	f
+compute_loss	utils/loss.py	/^def compute_loss(predictions, targets, model):  # predictions, targets, model$/;"	f
+conf_thres	detect.py	/^conf_thres   = args.conf_thres$/;"	v
+conf_thres	test.py	/^conf_thres   = args.conf_thres$/;"	v
+conf_thres	train.py	/^conf_thres   = args.valid_conf_thres$/;"	v
+cv_img	dataset_test.py	/^cv_img = cv_img.transpose(1, 2, 0)$/;"	v
+cv_img	dataset_test.py	/^cv_img = cv_img[:, :, (2, 1, 0)]$/;"	v
+cv_img	dataset_test.py	/^cv_img = image.detach().numpy()$/;"	v
+dataloader	dataset_test.py	/^dataloader = DataLoader(dataset, batch_size=1, shuffle=True)$/;"	v
+dataloader	test.py	/^dataloader = _create_validation_data_loader($/;"	v
+dataloader	train.py	/^dataloader = _create_data_loader($/;"	v
+dataset	dataset_test.py	/^dataset = MyDataset('\/home\/users\/matsuda\/work\/Datasets\/COCO')$/;"	v
+device	detect.py	/^device = torch.device("cuda" if torch.cuda.is_available() else "cpu")$/;"	v
+device	test.py	/^device = torch.device("cuda" if torch.cuda.is_available() else "cpu")$/;"	v
+device	train.py	/^device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")$/;"	v
+end	train.py	/^end = time.ctime()$/;"	v
+end_cnv	train.py	/^end_cnv = time.strptime(end)$/;"	v
+f1	test.py	/^precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+f1	train.py	/^        precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+fig	detect.py	/^fig, ax = plt.subplots(1)$/;"	v
+forward	model.py	/^    def forward(self, x):$/;"	m	class:YOLO
+forward	model.py	/^    def forward(self, x):$/;"	m	class:YOLOLayer
+forward	utils/loss.py	/^    def forward(self, pred, true):$/;"	m	class:BCEBlurWithLogitsLoss
+forward	utils/loss.py	/^    def forward(self, pred, true):$/;"	m	class:FocalLoss
+forward	utils/loss.py	/^    def forward(self, pred, true):$/;"	m	class:QFocalLoss
+get_batch_statistics	utils/utils.py	/^def get_batch_statistics(outputs, targets, iou_threshold):$/;"	f
+iaa	utils/augmentations.py	/^import imgaug.augmenters as iaa$/;"	I	nameref:module:imgaug.augmenters
+iaa	utils/transforms.py	/^import imgaug.augmenters as iaa$/;"	I	nameref:module:imgaug.augmenters
+image	dataset_test.py	/^image = torch.squeeze(image)$/;"	v
+image	dataset_test.py	/^image, target = next(batch_iter)$/;"	v
+image	detect.py	/^image = image.to(device)$/;"	v
+image	detect.py	/^image = transforms.Compose([$/;"	v
+image	train.py	/^            image = image.type(tensor_type)$/;"	v
+image	train.py	/^        image = image.to(device)$/;"	v
+image_path	detect.py	/^image_path   = args.image$/;"	v
+images	test.py	/^    images = images.type(tensor_type)$/;"	v
+input_image	detect.py	/^input_image = np.array(Image.open(image_path).convert('RGB'), dtype=np.uint8)$/;"	v
+iou_thres	test.py	/^iou_thres    = args.iou_thres$/;"	v
+iou_thres	train.py	/^iou_thres    = args.valid_iou_thres$/;"	v
+labels	test.py	/^labels         = []$/;"	v
+labels	train.py	/^        labels         = []$/;"	v
+load_classes	utils/utils.py	/^def load_classes(path):$/;"	f
+load_darknet_weights	model.py	/^    def load_darknet_weights(self, weights_path):$/;"	m	class:YOLO
+load_model	model.py	/^def load_model(weights_path, device, num_classes=80, trans=False, finetune=False):$/;"	f
+load_weights	model.py	/^    def load_weights(self, weights_path, device):$/;"	m	class:YOLO
+loss	train.py	/^        loss, _ = compute_loss(outputs, target, model)$/;"	v
+losses	train.py	/^losses = []$/;"	v
+lr	train.py	/^            lr = LR$/;"	v
+lr_steps	train.py	/^lr_steps     = [[400000, 0.1], [450000, 0.1]]$/;"	v
+lrs	train.py	/^lrs    = []$/;"	v
+mAP	test.py	/^mAP = AP.mean() $/;"	v
+mAP	train.py	/^        mAP = AP.mean() $/;"	v
+mAPs	train.py	/^mAPs   = []$/;"	v
+metrics_output	test.py	/^metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)$/;"	v
+metrics_output	train.py	/^        metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)$/;"	v
+model	detect.py	/^model = load_model(weights_path, device, num_classes=NUM_CLASSES)$/;"	v
+model	test.py	/^model = load_model(weights_path, device, num_classes=NUM_CLASSES)$/;"	v
+model	train.py	/^    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetun/;"	v
+name_file	detect.py	/^name_file    = args.class_names$/;"	v
+nms_thres	detect.py	/^nms_thres    = args.nms_thres$/;"	v
+nms_thres	test.py	/^nms_thres    = args.nms_thres$/;"	v
+nms_thres	train.py	/^nms_thres    = args.valid_nms_thres$/;"	v
+nn	detect.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+nn	hoge.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+nn	model.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+nn	test.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+nn	train.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+nn	utils/loss.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+nn	utils/utils.py	/^import torch.nn as nn$/;"	I	nameref:module:torch.nn
+non_max_suppression	utils/utils.py	/^def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None):$/;"	f
+np	detect.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	hoge.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	model.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	test.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	train.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	utils/datasets.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	utils/transforms.py	/^import numpy as np$/;"	I	nameref:module:numpy
+np	utils/utils.py	/^import numpy as np$/;"	I	nameref:module:numpy
+optim	train.py	/^import torch.optim as optim$/;"	I	nameref:module:torch.optim
+optim	utils/datasets.py	/^import torch.optim as optim$/;"	I	nameref:module:torch.optim
+optimizer	train.py	/^    optimizer = optim.Adam(param_to_update, lr=LR, weight_decay=DECAY)  # configに合わせて$/;"	v
+orig_h	detect.py	/^orig_h, orig_w = input_image.shape[0:2]$/;"	v
+orig_w	detect.py	/^orig_h, orig_w = input_image.shape[0:2]$/;"	v
+output	detect.py	/^output = model(image)       # 出力座標は 0~1 の値$/;"	v
+output	detect.py	/^output = non_max_suppression(output, conf_thres, nms_thres)$/;"	v
+output	detect.py	/^output = output[0]$/;"	v
+output_path	detect.py	/^output_path  = args.output_image$/;"	v
+outputs	test.py	/^        outputs = model(images)$/;"	v
+outputs	test.py	/^        outputs = non_max_suppression(outputs, conf_thres, nms_thres)$/;"	v
+outputs	train.py	/^                outputs = model(image)$/;"	v
+outputs	train.py	/^                outputs = non_max_suppression(outputs, conf_thres, nms_thres)$/;"	v
+outputs	train.py	/^        outputs = model(image)$/;"	v
+pad_x	detect.py	/^pad_x = max(orig_h - orig_w, 0) * (416 \/ max(orig_h, orig_w))$/;"	v
+pad_y	detect.py	/^pad_y = max(orig_w - orig_h, 0) * (416 \/ max(orig_h, orig_w))$/;"	v
+param_to_update	train.py	/^    model, param_to_update  = load_model(weights_path, device, NUM_CLASSES, trans=TRANS, finetun/;"	v
+parser	detect.py	/^parser = argparse.ArgumentParser()$/;"	v
+parser	test.py	/^parser = argparse.ArgumentParser()$/;"	v
+parser	train.py	/^parser = argparse.ArgumentParser()$/;"	v
+patches	detect.py	/^import matplotlib.patches as patches$/;"	I	nameref:module:matplotlib.patches
+patches	test.py	/^import matplotlib.patches as patches$/;"	I	nameref:module:matplotlib.patches
+plot_graph	utils/utils.py	/^def plot_graph(loss, rng, output_path, label="loss"):$/;"	f
+plt	dataset_test.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
+plt	detect.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
+plt	test.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
+plt	utils/utils.py	/^import matplotlib.pyplot as plt$/;"	I	nameref:module:matplotlib.pyplot
+precision	test.py	/^precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+precision	train.py	/^        precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+pred_labels	test.py	/^TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]$/;"	v
+pred_labels	train.py	/^        TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))/;"	v
+pred_scores	test.py	/^TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]$/;"	v
+pred_scores	train.py	/^        TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))/;"	v
+print_environment_info	utils/utils.py	/^def print_environment_info():$/;"	f
+provide_determinism	utils/utils.py	/^def provide_determinism(seed=42):$/;"	f
+recall	test.py	/^precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+recall	train.py	/^        precision, recall, AP, f1, ap_class = metrics_output$/;"	v
+rescale_boxes	utils/utils.py	/^def rescale_boxes(boxes, current_dim, original_shape):$/;"	f
+resize	utils/datasets.py	/^def resize(image, size):$/;"	f
+result_dir	train.py	/^result_dir = time.strftime("%Y%m%d_%H%M%S", start_cnv)$/;"	v
+result_path	train.py	/^result_path = os.path.join('results', result_dir) $/;"	v
+sample_metrics	test.py	/^sample_metrics = []$/;"	v
+sample_metrics	train.py	/^        sample_metrics = []$/;"	v
+set_bn_params	model.py	/^    def set_bn_params(self, layer, params, ptr):$/;"	m	class:YOLO
+set_conv_biases	model.py	/^    def set_conv_biases(self, layer, params, ptr):$/;"	m	class:YOLO
+set_conv_weights	model.py	/^    def set_conv_weights(self, layer, params, ptr):$/;"	m	class:YOLO
+smooth_BCE	utils/loss.py	/^def smooth_BCE(eps=0.1):  # https:\/\/github.com\/ultralytics\/yolov3\/issues\/238#issuecomment-/;"	f
+start	train.py	/^start = time.ctime()$/;"	v
+start_cnv	train.py	/^start_cnv = time.strptime(start)$/;"	v
+target	dataset_test.py	/^image, target = next(batch_iter)$/;"	v
+target	train.py	/^        target = target.to(device)$/;"	v
+tensor_type	detect.py	/^tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor$/;"	v
+tensor_type	test.py	/^tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor$/;"	v
+tensor_type	train.py	/^tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor$/;"	v
+to_cpu	utils/utils.py	/^def to_cpu(tensor):$/;"	f
+train_params_file	train.py	/^train_params_file = os.path.join(result_path, 'train_params.txt')$/;"	v
+transforms	utils/transforms.py	/^import torchvision.transforms as transforms$/;"	I	nameref:module:torchvision.transforms
+unpad_h	detect.py	/^unpad_h = 416 - pad_y$/;"	v
+unpad_w	detect.py	/^unpad_w = 416 - pad_x$/;"	v
+validation_dataloader	train.py	/^validation_dataloader = _create_validation_data_loader($/;"	v
+weights	hoge.py	/^    weights = np.fromfile(f, dtype=np.float32)$/;"	v
+weights_init_normal	utils/utils.py	/^def weights_init_normal(m):$/;"	f
+weights_path	detect.py	/^weights_path = args.weights$/;"	v
+weights_path	hoge.py	/^weights_path = 'weights\/yolov3-tiny.weights'$/;"	v
+weights_path	test.py	/^weights_path = args.weights$/;"	v
+weights_path	train.py	/^weights_path = args.weights$/;"	v
+worker_seed_set	utils/utils.py	/^def worker_seed_set(worker_id):$/;"	f
+xywh2xyxy	utils/utils.py	/^def xywh2xyxy(x):$/;"	f
+xywh2xyxy_np	utils/utils.py	/^def xywh2xyxy_np(x):$/;"	f
+コマンドメモ	README.md	/^## コマンドメモ$/;"	s
+コーディング手順	README.md	/^## コーディング手順$/;"	s
+ハイパーパラメータ	README.md	/^## ハイパーパラメータ$/;"	s
+備考	README.md	/^## 備考$/;"	s
+流れ	README.md	/^## 流れ$/;"	s

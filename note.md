@@ -57,3 +57,15 @@ batch_size * ((80+5) * 3)
 * ckpt のある層のパラメータ(tensor.Float型) を, 自作モデルのパラメータ
   (nn.Parameter型) に代入したいときは, その tensor.Float型を nn.Parameter() で
   囲むと良い.
+
+[augmentationの内容]
+* imgaug.Sharpen()
+* imgaug.Affine()
+* imgaug.AddToBrightness()
+* imgaug.AddToHue()
+* imgaug.Fliplr()
+* ImgAug
+	* xywh to xyxy
+	* imgaug.augmentable.bbs.BoundingBoxesOnImage()
+	* imgaug.PadToAspectRatio()
+	* clip_out_of_image()
