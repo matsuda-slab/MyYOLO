@@ -13,6 +13,7 @@ from torchvision import transforms
 from PIL import Image
 from model import YOLO, load_model
 from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
+import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/yolov3-tiny.weights')
@@ -23,6 +24,8 @@ parser.add_argument('--iou_thres', type=float, default=0.5)
 parser.add_argument('--class_names', default='coco.names')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
+parser.add_argument('--quant', action='store_true', default=False)
+parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
 IMG_SIZE     = 416
@@ -38,7 +41,11 @@ class_file   = args.class_names
 NUM_CLASSES  = args.num_classes
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if args.nogpu:
+    device = torch.device("cpu")
 tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+if args.nogpu:
+    tensor_type = torch.FloatTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
@@ -49,7 +56,7 @@ with open(class_file, 'r') as f:
 #model = YOLO(num_classes=1)
 #model.load_state_dict(torch.load(weights_path, map_location=device))
 #model.to(device)
-model = load_model(weights_path, device, num_classes=NUM_CLASSES)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(
@@ -63,7 +70,7 @@ model.eval()
 
 labels         = []
 sample_metrics = []
-for _, images, targets in dataloader:
+for _, images, targets in tqdm.tqdm(dataloader):
     # ラベル(番号)をリスト化している (あとで必要なのだろう)
     labels += targets[:, 1].tolist()
 

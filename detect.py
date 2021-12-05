@@ -1,9 +1,11 @@
-from utils.transforms import Resize, DEFAULT_TRANSFORMS
+from utils.transforms_detect import resize_aspect_ratio
 import torch
 import os
 import sys
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
@@ -11,8 +13,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
+import cv2
 from model import YOLO, load_model
 from utils.utils import non_max_suppression
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
@@ -22,6 +26,8 @@ parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--quant', action='store_true', default=False)
+parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -31,9 +37,14 @@ nms_thres    = args.nms_thres
 output_path  = args.output_image
 NUM_CLASSES  = args.num_classes
 name_file    = args.class_names
+NO_GPU       = args.nogpu
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+if NO_GPU or args.quant:
+    device = torch.device("cpu")
+tensor_type = torch.cuda.FloatTensor if (torch.cuda.is_available() and not NO_GPU) else torch.FloatTensor
+if args.quant:
+    tensor_type = torch.ByteTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
@@ -41,36 +52,41 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-# model = YOLO(num_classes=NUM_CLASSES)
-# model.load_state_dict(torch.load(weights_path, map_location=device))
-# model.to(device)
-model = load_model(weights_path, device, num_classes=NUM_CLASSES)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
 
 # 画像パスから入力画像データに変換
-#input_image = Image.open(image_path).convert('RGB')
-#resizer     = transforms.Resize((416, 416), interpolation=2)    # nearest
-#resized_image = resizer(input_image)
-#resized_image = np.array(resized_image, dtype=np.uint8)
-#image       = torch.from_numpy(resized_image).to(device)
-#image       = image.permute(2, 0, 1)
-#image       = image.unsqueeze(0)
-#image       = image.type(tensor_type)
-input_image = np.array(Image.open(image_path).convert('RGB'), dtype=np.uint8)
-image = transforms.Compose([
-    DEFAULT_TRANSFORMS,
-    Resize(416)])((input_image, np.zeros((1,5))))[0].unsqueeze(0)
+start = time.time();
+
+input_image = cv2.imread(image_path)
+rgb_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+image = transforms.ToTensor()(input_image)      # ここで 0~1のfloatになる
+
+image_load_t = time.time()
+
+image = resize_aspect_ratio(image)
+image = torch.from_numpy(image)
 image = image.to(device)
+image = image.permute(2, 0, 1)
+image = image[[2,1,0],:,:]
+image = image.unsqueeze(0)
+
+image_convert_t = time.time()
 
 # 入力画像からモデルによる推論を実行する
 model.eval()
+
 output = model(image)       # 出力座標は 0~1 の値
+
+inference_t = time.time()
 
 # 推論結果に NMS をかける
 # ここの outputの出力座標 はすでに 0~416 にスケールされている
 output = non_max_suppression(output, conf_thres, nms_thres)
 
+nms_t = time.time()
+
 output = output[0]
-print("output.shape :", output.shape)
+print("output :", output.shape)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]
@@ -95,7 +111,7 @@ output[:, 3] = ((output[:, 3] - pad_y // 2) / unpad_h) * orig_h
 # 出力画像の下地として, 入力画像を読み込む
 plt.figure()
 fig, ax = plt.subplots(1)
-ax.imshow(input_image)
+ax.imshow(rgb_image)
 
 ### クラスによって描く色を決める
 cmap = plt.get_cmap('tab20b')       # tab20b はカラーマップの種類の1つ
@@ -116,7 +132,17 @@ for x_min, y_min, x_max, y_max, conf, class_pred in output:
     # ラベル
     plt.text(x_min, y_min, s=class_names[int(class_pred)], color='white', verticalalignment='top', bbox={'color': color, 'pad':0})
 
+end = time.time()
+print("elapsed time = %.4f sec" % (end - start))
+print("items :")
+print(" image_load : %.4f sec" % (image_load_t - start))
+print(" image_convert : %.4f sec" % (image_convert_t - image_load_t))
+print(" inference : %.4f sec" % (inference_t - image_convert_t))
+print(" nms : %.4f sec" % (nms_t - inference_t))
+print(" plot : %.4f sec" % (end - nms_t))
+
 # 描画する
 plt.axis("off")     # 軸をオフにする
 plt.savefig(output_path)
+plt.show()
 plt.close()

@@ -1,22 +1,11 @@
 import os
 
+import tensorflow as tf
 import torch
 import torch.nn as nn
 import cv2
 from torch.utils.data import Dataset
 #from pycocotools.coco import COCO
-
-import matplotlib
-#matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
-def plot_graph(loss, rng, output_path, label="loss"):
-    graph = plt.figure()
-    plt.plot(range(rng), loss, label=label)
-    plt.legend()
-    plt.grid()
-    #plt.show()
-    graph.savefig(output_path)
 
 """
 # 推論結果と教師ラベルから, 損失計算
@@ -342,7 +331,8 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
          detections with shape: nx6 (x1, y1, x2, y2, conf, cls)
     """
 
-    nc = prediction.shape[2] - 5  # number of classes
+    #nc = prediction.shape[2] - 5  # number of classes
+    nc = tf.shape(prediction)[2] - 5  # number of classes
 
     # Settings
     # (pixels) minimum and maximum box width and height
