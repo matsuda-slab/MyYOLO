@@ -19,3 +19,6 @@ plot_params/*.png
 plot_params/*.dat
 plot_params/*.txt
 plot_params/params/
+plot_params/weights/
+plot_params/layer_distribution/bn_weight*
+plot_params/layer_distribution/output_graph*
