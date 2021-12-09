@@ -15,9 +15,20 @@ for i in range(8):
 graph_y_w = np.zeros((14, 9))
 graph_y_b = np.zeros((14, 9))
 
+def autolabel(graph):
+    for rect in graph:
+        height = int(rect.get_height())
+        plt.annotate('{}'.format(height),
+                xy=(rect.get_x()+ rect.get_width() / 2, height),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha='center', va='bottom'
+        )
+
 def main():
     #C++ head file -> numpy array #per layer
     for i in range(14):
+    #for i in range(1):
         if not i == 5:
             print("step1 :", i,"/13")
             file_name = os.path.join(header_path, "conv_" + str(i) + "_weight_bn.h")
@@ -42,16 +53,22 @@ def main():
     #write graph
     label = ["0~1", "1~2", "2~4", "4~8", "8~16","16~32","32~64","64~128","128~"]
     for i in range(14):
+    #for i in range(1):
         if not i == 5:
+            max_height_w = max(graph_y_w[i])
+            max_height_b = max(graph_y_b[i])
             print("step2 :" ,i,"/13")
             left = np.array(range(9))
 
             #weight
             print(graph_y_w[i])
             height = graph_y_w[i]
+            axes = plt.axes()
+            axes.set_ylim([0, max_height_w*1.1])
             plt.xlabel("value")
             plt.ylabel("num of parameters")
-            plt.bar(left, height, tick_label=label, align="center")   # histgram
+            graph = plt.bar(left, height, tick_label=label, align="center")   # histgram
+            autolabel(graph)
             plt.savefig("output_graph_weight/"+"layer"+str(i)+".png")
             plt.clf()
             plt.close()
@@ -59,9 +76,12 @@ def main():
             #bias
             print(graph_y_b[i])
             height = graph_y_b[i]
+            axes = plt.axes()
+            axes.set_ylim([0, max_height_b*1.1])
             plt.xlabel("value")
             plt.ylabel("num of parameters")
-            plt.bar(left, height, tick_label=label, align="center")   # histgram
+            graph = plt.bar(left, height, tick_label=label, align="center")   # histgram
+            autolabel(graph)
             plt.savefig("output_graph_bias/"+"layer"+str(i)+".png")
             plt.clf()
             plt.close()
