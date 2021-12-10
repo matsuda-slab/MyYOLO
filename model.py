@@ -10,8 +10,8 @@ import time
 class YOLO(nn.Module):
     def __init__(self, num_classes, quant=False, dropout=False):
         super(YOLO, self).__init__()
-        self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
-        #self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
+        #self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
+        self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
         self.img_size    = 416
         self.num_classes = num_classes
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
