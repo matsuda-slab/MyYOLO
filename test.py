@@ -21,7 +21,7 @@ parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--conf_thres', type=float, default=0.01)
 parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--iou_thres', type=float, default=0.5)
-parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--class_names', default='namefiles/coco.names')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 parser.add_argument('--quant', action='store_true', default=False)
@@ -56,7 +56,7 @@ with open(class_file, 'r') as f:
 #model = YOLO(num_classes=1)
 #model.load_state_dict(torch.load(weights_path, map_location=device))
 #model.to(device)
-model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, qconvert=args.quant)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(

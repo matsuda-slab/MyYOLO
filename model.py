@@ -15,6 +15,7 @@ class YOLO(nn.Module):
         self.img_size    = 416
         self.num_classes = num_classes
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
+        #self.p_dropout   = p_dropout
 
         # modules
         self.conv1    = nn.Sequential(OrderedDict([
