@@ -17,7 +17,7 @@ quant        = True if 'quant' in weights_path else False
 
 # load model
 device = torch.device("cpu")
-model  = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=quant, qconvert=quant)
+model  = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=quant)
 
 keys   = str(model.state_dict().keys())
 print(keys.replace(',', '\n'))
