@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 header_path = sys.argv[1]
+color = "#e5ccff"
 
 graph_x = np.empty(1)
 graph_x.dtype = np.int
@@ -51,7 +52,7 @@ def main():
             weight_file.close()
 
     #write graph
-    label = ["0~1", "1~2", "2~4", "4~8", "8~16","16~32","32~64","64~128","128~"]
+    label = ["[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)","[16,32)","[32,64)","[64,128)","[128,"]
     for i in range(14):
     #for i in range(1):
         if not i == 5:
@@ -67,7 +68,7 @@ def main():
             axes.set_ylim([0, max_height_w*1.1])
             plt.xlabel("value")
             plt.ylabel("num of parameters")
-            graph = plt.bar(left, height, tick_label=label, align="center")   # histgram
+            graph = plt.bar(left, height, tick_label=label, align="center", color=color)   # histgram
             autolabel(graph)
             plt.savefig("output_graph_weight/"+"layer"+str(i)+".png")
             plt.clf()
@@ -80,7 +81,7 @@ def main():
             axes.set_ylim([0, max_height_b*1.1])
             plt.xlabel("value")
             plt.ylabel("num of parameters")
-            graph = plt.bar(left, height, tick_label=label, align="center")   # histgram
+            graph = plt.bar(left, height, tick_label=label, align="center", color=color)   # histgram
             autolabel(graph)
             plt.savefig("output_graph_bias/"+"layer"+str(i)+".png")
             plt.clf()
