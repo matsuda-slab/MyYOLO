@@ -25,9 +25,10 @@ parser.add_argument('--conf_thres', type=float, default=0.5)
 parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
 parser.add_argument('--num_classes', type=int, default=80)
-parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--class_names', default='namefiles/coco.names')
 parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
+parser.add_argument('--notiny', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -38,6 +39,7 @@ output_path  = args.output_image
 NUM_CLASSES  = args.num_classes
 name_file    = args.class_names
 NO_GPU       = args.nogpu
+EN_TINY      = not args.notiny
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if NO_GPU or args.quant:
@@ -52,7 +54,7 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
+model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
 
 # 画像パスから入力画像データに変換
 start = time.time();

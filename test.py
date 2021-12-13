@@ -26,6 +26,7 @@ parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
+parser.add_argument('--notiny', action='store_true', default=False)
 args = parser.parse_args()
 
 IMG_SIZE     = 416
@@ -39,6 +40,7 @@ nms_thres    = args.nms_thres
 iou_thres    = args.iou_thres
 class_file   = args.class_names
 NUM_CLASSES  = args.num_classes
+EN_TINY      = not args.notiny
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if args.nogpu:
@@ -56,7 +58,7 @@ with open(class_file, 'r') as f:
 #model = YOLO(num_classes=1)
 #model.load_state_dict(torch.load(weights_path, map_location=device))
 #model.to(device)
-model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant)
+model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES, quant=args.quant)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(

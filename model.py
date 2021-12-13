@@ -335,7 +335,7 @@ class YOLO_tiny(nn.Module):
 class YOLO(nn.Module):
     def __init__(self, num_classes=80):
         super(YOLO, self).__init__()
-        self.anchors     = [[[10,13], [16,30], [33,23]], [[30,61], [62,45], [59,119], [116,90], [156,198], [373,326]]]
+        self.anchors     = [[[10,13], [16,30], [33,23]], [[30,61], [62,45], [59,119]], [[116,90], [156,198], [373,326]]]
         self.img_size    = 416
         self.num_classes = num_classes
         self.ylch        = (5 + self.num_classes) * 3
@@ -396,7 +396,7 @@ class YOLO(nn.Module):
         self.res23  = ResBlock(1024)
 
         self.conv7 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -406,7 +406,7 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv9 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -416,7 +416,7 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv11 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -426,17 +426,17 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv13 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(1024, 255, kernel_size=1, stride=1, padding=1, bias=1)),
+                            ('conv', nn.Conv2d(1024, self.ylch, kernel_size=1, stride=1, padding=0, bias=1)),
                      ]))
-        self.yolo1 = YOLOLayer(self.anchors[2])
+        self.yolo1 = YOLOLayer(self.anchors[2], self.img_size, self.num_classes)
         self.conv14 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.upsample1 = nn.Upsample(scale_factor=2, mode='nearest')
         self.conv15 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(768, 256, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -446,7 +446,7 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv17 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -456,7 +456,7 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv19 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -466,17 +466,17 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv21 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(512, 255, kernel_size=1, stride=1, padding=1, bias=1)),
+                            ('conv', nn.Conv2d(512, self.ylch, kernel_size=1, stride=1, padding=0, bias=1)),
                      ]))
-        self.yolo2 = YOLOLayer(self.anchors[1])
+        self.yolo2 = YOLOLayer(self.anchors[1], self.img_size, self.num_classes)
         self.conv22 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.upsample2 = nn.Upsample(scale_factor=2, mode='nearest')
         self.conv23 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(384, 128, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -486,7 +486,7 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv25 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -496,7 +496,7 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv27 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=0, bias=0)),
                             ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
@@ -506,9 +506,9 @@ class YOLO(nn.Module):
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
         self.conv29 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(256, 255, kernel_size=1, stride=1, padding=1, bias=1)),
+                            ('conv', nn.Conv2d(256, self.ylch, kernel_size=1, stride=1, padding=0, bias=1)),
                      ]))
-        self.yolo3 = YOLOLayer(self.anchors[0])
+        self.yolo3 = YOLOLayer(self.anchors[0], self.img_size, self.num_classes)
 
     def set_bn_params(self, layer, params, ptr):
         # bias
@@ -678,7 +678,7 @@ class YOLO(nn.Module):
         ptr = self.set_conv_weights(self.conv8.conv, weights, ptr)
         ptr = self.set_bn_params(self.conv9.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv9.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv10.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv10.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv10.conv, weights, ptr)
         ptr = self.set_bn_params(self.conv11.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv11.conv, weights, ptr)
@@ -687,36 +687,36 @@ class YOLO(nn.Module):
         ptr = self.set_conv_biases(self.conv13.conv, weights, ptr)
         ptr = self.set_conv_weights(self.conv13.conv, weights, ptr)
 
-        ptr = self.set_conv_biases(self.conv14.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv14.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv14.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv15.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv15.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv15.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv16.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv16.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv16.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv17.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv17.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv17.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv18.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv18.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv18.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv19.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv19.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv19.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv20.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv20.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv20.conv, weights, ptr)
         ptr = self.set_conv_biases(self.conv21.conv, weights, ptr)
         ptr = self.set_conv_weights(self.conv21.conv, weights, ptr)
 
-        ptr = self.set_conv_biases(self.conv22.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv22.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv22.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv23.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv23.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv23.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv24.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv24.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv24.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv25.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv25.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv25.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv26.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv26.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv26.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv27.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv27.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv27.conv, weights, ptr)
-        ptr = self.set_conv_biases(self.conv28.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv28.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv28.conv, weights, ptr)
         ptr = self.set_conv_biases(self.conv29.conv, weights, ptr)
         ptr = self.set_conv_weights(self.conv29.conv, weights, ptr)
@@ -727,14 +727,14 @@ class YOLO(nn.Module):
         # backborn
         x = self.conv1(x)
 
-        x = self.conv2(x)
+        x = self.conv2(x)       # down sample (416 -> 208)
         x = self.res1(x)
 
-        x = self.conv3(x)
+        x = self.conv3(x)       # down sample (208 -> 104)
         x = self.res2(x)
         x = self.res3(x)
 
-        x = self.conv4(x)
+        x = self.conv4(x)       # down sample (104 -> 52)
         x = self.res4(x)
         x = self.res5(x)
         x = self.res6(x)
@@ -744,7 +744,7 @@ class YOLO(nn.Module):
         x = self.res10(x)
         res11_out = self.res11(x)
 
-        x = self.conv5(res11_out)
+        x = self.conv5(res11_out)       # down sample (52 -> 26)
         x = self.res12(x)
         x = self.res13(x)
         x = self.res14(x)
@@ -754,7 +754,7 @@ class YOLO(nn.Module):
         x = self.res18(x)
         res19_out = self.res19(x)
 
-        x = self.conv6(res19_out)
+        x = self.conv6(res19_out)       # down sample (26 -> 13)
         x = self.res20(x)
         x = self.res21(x)
         x = self.res22(x)
@@ -778,7 +778,7 @@ class YOLO(nn.Module):
         x = self.upsample1(x)
 
         # route (-1, 61) : concat
-        x = torch.concat([x, res19_out], dim=1)
+        x = torch.cat([x, res19_out], dim=1)
         x = self.conv15(x)
         x = self.conv16(x)
         x = self.conv17(x)
@@ -806,7 +806,7 @@ class YOLO(nn.Module):
         x = self.conv28(x)
         x = self.conv29(x)
         # YOLOレイヤ2
-        x3 = self.yolo3(x3)
+        x3 = self.yolo3(x)
         yolo_outputs.append(x3)
 
         if self.training:
@@ -1023,14 +1023,14 @@ class ResBlock(nn.Module):
         self.ch = ch
 
         self.conv1 = nn.Sequential(OrderedDict([
-                        ('conv', nn.Conv2d(self.ch, self.ch//2, kernel_size=1, stride=1)),
+                        ('conv', nn.Conv2d(self.ch, self.ch//2, kernel_size=1, padding=0, stride=1)),
                         ('bn',   nn.BatchNorm2d(self.ch//2, momentum=0.1, eps=1e-5)),
                         ('relu', nn.LeakyReLU(0.1))
                      ]))
                 
         self.conv2 = nn.Sequential(OrderedDict([
-                        ('conv', nn.Conv2d(self.ch//2, self.ch, kernel_size=1, stride=1)),
-                        ('bn',   nn.BatchNorm2d(self.ch//2, momentum=0.1, eps=1e-5)),
+                        ('conv', nn.Conv2d(self.ch//2, self.ch, kernel_size=3, padding=1, stride=1)),
+                        ('bn',   nn.BatchNorm2d(self.ch, momentum=0.1, eps=1e-5)),
                         ('relu', nn.LeakyReLU(0.1))
                      ]))
 
@@ -1038,7 +1038,7 @@ class ResBlock(nn.Module):
         f = self.conv1(x)
         f = self.conv2(f)
 
-        return = f + x
+        return f + x
 
 def load_model(weights_path, device, tiny=True, num_classes=80, trans=False, restart=False, finetune=False, use_sep=False, quant=False, dropout=False, jit=False):
     model = None
@@ -1113,6 +1113,7 @@ def load_model(weights_path, device, tiny=True, num_classes=80, trans=False, res
 
     # YOLO model
     else:               
+        model = YOLO(80).to(device)
         model.load_darknet_weights(weights_path)
 
 
