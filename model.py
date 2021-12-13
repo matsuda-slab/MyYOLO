@@ -7,9 +7,9 @@ import numpy as np
 import time
 
 # YOLOv3-tiny
-class YOLO(nn.Module):
+class YOLO_tiny(nn.Module):
     def __init__(self, num_classes, quant=False, dropout=False):
-        super(YOLO, self).__init__()
+        super(YOLO_tiny, self).__init__()
         #self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
         self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
         self.img_size    = 416
@@ -332,6 +332,487 @@ class YOLO(nn.Module):
         return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
         #return  torch.cat(yolo_outputs, 1)
 
+class YOLO(nn.Module):
+    def __init__(self, num_classes=80):
+        super(YOLO, self).__init__()
+        self.anchors     = [[[10,13], [16,30], [33,23]], [[30,61], [62,45], [59,119], [116,90], [156,198], [373,326]]]
+        self.img_size    = 416
+        self.num_classes = num_classes
+        self.ylch        = (5 + self.num_classes) * 3
+
+        # modules
+        self.conv1 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(32, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv2 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(64, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.res1  = ResBlock(64)
+        self.conv3 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.res2  = ResBlock(128)
+        self.res3  = ResBlock(128)
+        self.conv4 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.res4  = ResBlock(256)
+        self.res5  = ResBlock(256)
+        self.res6  = ResBlock(256)
+        self.res7  = ResBlock(256)
+        self.res8  = ResBlock(256)
+        self.res9  = ResBlock(256)
+        self.res10  = ResBlock(256)
+        self.res11  = ResBlock(256)
+        self.conv5 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.res12  = ResBlock(512)
+        self.res13  = ResBlock(512)
+        self.res14  = ResBlock(512)
+        self.res15  = ResBlock(512)
+        self.res16  = ResBlock(512)
+        self.res17  = ResBlock(512)
+        self.res18  = ResBlock(512)
+        self.res19  = ResBlock(512)
+        self.conv6 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.res20  = ResBlock(1024)
+        self.res21  = ResBlock(1024)
+        self.res22  = ResBlock(1024)
+        self.res23  = ResBlock(1024)
+
+        self.conv7 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv8 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv9 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv10 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv11 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv12 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv13 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(1024, 255, kernel_size=1, stride=1, padding=1, bias=1)),
+                     ]))
+        self.yolo1 = YOLOLayer(self.anchors[2])
+        self.conv14 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.upsample1 = nn.Upsample(scale_factor=2, mode='nearest')
+        self.conv15 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv16 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv17 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv18 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv19 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv20 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv21 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(512, 255, kernel_size=1, stride=1, padding=1, bias=1)),
+                     ]))
+        self.yolo2 = YOLOLayer(self.anchors[1])
+        self.conv22 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.upsample2 = nn.Upsample(scale_factor=2, mode='nearest')
+        self.conv23 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv24 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv25 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv26 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv27 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 128, kernel_size=1, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(128, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv28 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=0)),
+                            ('bn',   nn.BatchNorm2d(256, momentum=0.1, eps=1e-5)),
+                            ('relu', nn.LeakyReLU(0.1))
+                     ]))
+        self.conv29 = nn.Sequential(OrderedDict([
+                            ('conv', nn.Conv2d(256, 255, kernel_size=1, stride=1, padding=1, bias=1)),
+                     ]))
+        self.yolo3 = YOLOLayer(self.anchors[0])
+
+    def set_bn_params(self, layer, params, ptr):
+        # bias
+        num_b = layer.bias.numel()
+        bn_b  = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
+        layer.bias.data.copy_(bn_b)
+        ptr  += num_b
+    
+        # weight
+        num_w = layer.weight.numel()
+        bn_w  = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
+        layer.weight.data.copy_(bn_w)
+        ptr  += num_w
+    
+        # running mean
+        num_rm = layer.running_mean.numel()
+        bn_rm  = torch.from_numpy(params[ptr : ptr + num_rm]).view_as(layer.running_mean)
+        layer.running_mean.copy_(bn_rm)
+        ptr   += num_rm
+    
+        # running var
+        num_rv = layer.running_var.numel()
+        bn_rv  = torch.from_numpy(params[ptr : ptr + num_rv]).view_as(layer.running_var)
+        layer.running_var.copy_(bn_rv)
+        ptr   += num_rv
+
+        return ptr
+
+    def set_conv_weights(self, layer, params, ptr):
+        num_w  = layer.weight.numel()
+        conv_w = torch.from_numpy(params[ptr : ptr + num_w]).view_as(layer.weight)
+        layer.weight.data.copy_(conv_w)
+        ptr   += num_w
+
+        return ptr
+    
+    def set_conv_biases(self, layer, params, ptr):
+        num_b  = layer.bias.numel()
+        conv_b = torch.from_numpy(params[ptr : ptr + num_b]).view_as(layer.bias)
+        layer.bias.data.copy_(conv_b)
+        ptr   += num_b
+
+        return ptr
+    
+    def load_darknet_weights(self, weights_path):
+        # バイナリファイルを読み込み, 配列にデータを格納
+        with open(weights_path, "rb") as f:
+            # skip header
+            #f.read(20)
+
+            weights = np.fromfile(f, dtype=np.float32)
+    
+        ptr = 5        # 0~4 は, ヘッダのようなものが入っている
+    
+        ptr = self.set_bn_params(self.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res1.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res1.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res1.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res1.conv2.conv, weights, ptr)
+
+        ptr = self.set_bn_params(self.conv3.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv3.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res2.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res2.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res2.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res2.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res3.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res3.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res3.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res3.conv2.conv, weights, ptr)
+
+        ptr = self.set_bn_params(self.conv4.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv4.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res4.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res4.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res4.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res4.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res5.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res5.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res5.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res5.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res6.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res6.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res6.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res6.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res7.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res7.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res7.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res7.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res8.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res8.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res8.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res8.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res9.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res9.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res9.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res9.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res10.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res10.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res10.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res10.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res11.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res11.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res11.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res11.conv2.conv, weights, ptr)
+
+        ptr = self.set_bn_params(self.conv5.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv5.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res12.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res12.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res12.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res12.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res13.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res13.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res13.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res13.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res14.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res14.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res14.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res14.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res15.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res15.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res15.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res15.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res16.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res16.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res16.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res16.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res17.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res17.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res17.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res17.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res18.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res18.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res18.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res18.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res19.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res19.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res19.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res19.conv2.conv, weights, ptr)
+
+        ptr = self.set_bn_params(self.conv6.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv6.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res20.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res20.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res20.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res20.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res21.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res21.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res21.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res21.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res22.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res22.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res22.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res22.conv2.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res23.conv1.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res23.conv1.conv, weights, ptr)
+        ptr = self.set_bn_params(self.res23.conv2.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.res23.conv2.conv, weights, ptr)
+    
+        ptr = self.set_bn_params(self.conv7.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv7.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv8.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv8.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv9.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv9.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv10.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv10.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv11.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv11.conv, weights, ptr)
+        ptr = self.set_bn_params(self.conv12.bn, weights, ptr)
+        ptr = self.set_conv_weights(self.conv12.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv13.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv13.conv, weights, ptr)
+
+        ptr = self.set_conv_biases(self.conv14.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv14.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv15.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv15.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv16.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv16.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv17.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv17.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv18.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv18.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv19.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv19.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv20.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv20.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv21.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv21.conv, weights, ptr)
+
+        ptr = self.set_conv_biases(self.conv22.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv22.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv23.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv23.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv24.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv24.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv25.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv25.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv26.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv26.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv27.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv27.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv28.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv28.conv, weights, ptr)
+        ptr = self.set_conv_biases(self.conv29.conv, weights, ptr)
+        ptr = self.set_conv_weights(self.conv29.conv, weights, ptr)
+
+    def forward(self, x):
+        yolo_outputs = []
+
+        # backborn
+        x = self.conv1(x)
+
+        x = self.conv2(x)
+        x = self.res1(x)
+
+        x = self.conv3(x)
+        x = self.res2(x)
+        x = self.res3(x)
+
+        x = self.conv4(x)
+        x = self.res4(x)
+        x = self.res5(x)
+        x = self.res6(x)
+        x = self.res7(x)
+        x = self.res8(x)
+        x = self.res9(x)
+        x = self.res10(x)
+        res11_out = self.res11(x)
+
+        x = self.conv5(res11_out)
+        x = self.res12(x)
+        x = self.res13(x)
+        x = self.res14(x)
+        x = self.res15(x)
+        x = self.res16(x)
+        x = self.res17(x)
+        x = self.res18(x)
+        res19_out = self.res19(x)
+
+        x = self.conv6(res19_out)
+        x = self.res20(x)
+        x = self.res21(x)
+        x = self.res22(x)
+        x = self.res23(x)
+
+        x = self.conv7(x)
+        x = self.conv8(x)
+        x = self.conv9(x)
+        x = self.conv10(x)
+        conv11_out = self.conv11(x)
+        x1 = self.conv12(conv11_out)
+        x1 = self.conv13(x1)
+
+        # YOLOレイヤ1
+        x1 = self.yolo1(x1)
+        yolo_outputs.append(x1)
+        
+        # route (-4)
+        x = conv11_out
+        x = self.conv14(x)
+        x = self.upsample1(x)
+
+        # route (-1, 61) : concat
+        x = torch.concat([x, res19_out], dim=1)
+        x = self.conv15(x)
+        x = self.conv16(x)
+        x = self.conv17(x)
+        x = self.conv18(x)
+        conv19_out = self.conv19(x)
+        x2 = self.conv20(conv19_out)
+        x2 = self.conv21(x2)
+
+        # YOLOレイヤ2
+        x2 = self.yolo2(x2)
+        yolo_outputs.append(x2)
+        
+        # route (-4)
+        x = conv19_out
+        x = self.conv22(x)
+        x = self.upsample2(x)
+
+        # route (-1, 36) : concat
+        x = torch.cat([x, res11_out], dim=1)
+        x = self.conv23(x)
+        x = self.conv24(x)
+        x = self.conv25(x)
+        x = self.conv26(x)
+        x = self.conv27(x)
+        x = self.conv28(x)
+        x = self.conv29(x)
+        # YOLOレイヤ2
+        x3 = self.yolo3(x3)
+        yolo_outputs.append(x3)
+
+        if self.training:
+            return yolo_outputs
+        return torch.cat(yolo_outputs, 1)
+
 class YOLO_sep(nn.Module):
     def __init__(self, num_classes):
         super(YOLO_sep, self).__init__()
@@ -536,27 +1017,79 @@ class YOLOLayer(nn.Module):
         # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
         return x
 
-def load_model(weights_path, device, num_classes=80, trans=False, restart=False, finetune=False, use_sep=False, quant=False, dropout=False, jit=False):
+class ResBlock(nn.Module):
+    def __init__(self, ch):
+        super().__init__()
+        self.ch = ch
+
+        self.conv1 = nn.Sequential(OrderedDict([
+                        ('conv', nn.Conv2d(self.ch, self.ch//2, kernel_size=1, stride=1)),
+                        ('bn',   nn.BatchNorm2d(self.ch//2, momentum=0.1, eps=1e-5)),
+                        ('relu', nn.LeakyReLU(0.1))
+                     ]))
+                
+        self.conv2 = nn.Sequential(OrderedDict([
+                        ('conv', nn.Conv2d(self.ch//2, self.ch, kernel_size=1, stride=1)),
+                        ('bn',   nn.BatchNorm2d(self.ch//2, momentum=0.1, eps=1e-5)),
+                        ('relu', nn.LeakyReLU(0.1))
+                     ]))
+
+    def forward(self, x):
+        f = self.conv1(x)
+        f = self.conv2(f)
+
+        return = f + x
+
+def load_model(weights_path, device, tiny=True, num_classes=80, trans=False, restart=False, finetune=False, use_sep=False, quant=False, dropout=False, jit=False):
     model = None
 
-    if trans:
-      param_to_update = []
-      update_param_names = ['conv10.conv.weight', 'conv10.conv.bias',
-                            'conv13.conv.weight', 'conv13.conv.bias']
+    # YOLO-tiny model
+    if tiny:
+        if trans:
+          param_to_update = []
+          update_param_names = ['conv10.conv.weight', 'conv10.conv.bias',
+                                'conv13.conv.weight', 'conv13.conv.bias']
 
-      if not restart:
-          model = YOLO(80, dropout).to(device)
-      else:
-          model = YOLO(num_classes, dropout).to(device)
+          if not restart:
+              model = YOLO_tiny(80, dropout).to(device)
+          else:
+              model = YOLO_tiny(num_classes, dropout).to(device)
 
-      if weights_path.endswith('weights'):
-          model.load_darknet_weights(weights_path);
-      else:
-          #model.load_weights(weights_path, device)
-          model.load_state_dict(torch.load(weights_path, map_location=device))
+          if weights_path.endswith('weights'):
+              model.load_darknet_weights(weights_path);
+          else:
+              #model.load_weights(weights_path, device)
+              model.load_state_dict(torch.load(weights_path, map_location=device))
 
-      # 最終層を置き換え
-      if not restart:
+          # 最終層を置き換え
+          if not restart:
+              ylch = (5 + num_classes) * 3
+              model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+              model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+              model.yolo1       = YOLOLayer(model.anchors[1], model.img_size, num_classes)
+              model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
+              model.yolo_layers = [model.yolo1, model.yolo2]
+
+          # 置き換えた層以外のパラメータをフリーズ
+          for (key, param) in model.named_parameters():
+            if key in update_param_names:
+              param.requires_grad = True
+              param_to_update.append(param)
+            else:
+              param.requires_grad = False
+
+          model.to(device)
+          return model, param_to_update
+
+        elif finetune:
+          model = YOLO_sep(80).to(device) if use_sep else YOLO(80, dropout).to(device)
+          if weights_path.endswith('weights'):
+              model.load_darknet_weights(weights_path);
+          else:
+              #model.load_weights(weights_path, device)
+              weights = torch.load(weights_path, map_location=device)
+              model.load_state_dict(weights)
+          # 最終層を置き換え
           ylch = (5 + num_classes) * 3
           model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
           model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
@@ -564,46 +1097,24 @@ def load_model(weights_path, device, num_classes=80, trans=False, restart=False,
           model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
           model.yolo_layers = [model.yolo1, model.yolo2]
 
-      # 置き換えた層以外のパラメータをフリーズ
-      for (key, param) in model.named_parameters():
-        if key in update_param_names:
-          param.requires_grad = True
-          param_to_update.append(param)
-        else:
-          param.requires_grad = False
+          model.to(device)
+          return model
 
-      model.to(device)
-      return model, param_to_update
+        else:           # 推論 or 一から学習
+          model = YOLO_sep(num_classes, dropout).to(device) if use_sep else YOLO(num_classes, quant, dropout).to(device)
 
-    elif finetune:
-      model = YOLO_sep(80).to(device) if use_sep else YOLO(80, dropout).to(device)
-      if weights_path.endswith('weights'):
-          model.load_darknet_weights(weights_path);
-      else:
-          #model.load_weights(weights_path, device)
-          weights = torch.load(weights_path, map_location=device)
-          model.load_state_dict(weights)
-      # 最終層を置き換え
-      ylch = (5 + num_classes) * 3
-      model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-      model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-      model.yolo1       = YOLOLayer(model.anchors[1], model.img_size, num_classes)
-      model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
-      model.yolo_layers = [model.yolo1, model.yolo2]
+          if weights_path:
+            if quant and jit:               # 量子化モデルを使った推論
+                model = torch.jit.load(weights_path)
+            elif weights_path.endswith('weights'):
+                model.load_darknet_weights(weights_path)
+            else:       # pt file
+                model.load_state_dict(torch.load(weights_path, map_location=device))
 
-      model.to(device)
-      return model
+    # YOLO model
+    else:               
+        model.load_darknet_weights(weights_path)
 
-    else:           # 推論 or 一から学習
-      model = YOLO_sep(num_classes, dropout).to(device) if use_sep else YOLO(num_classes, quant, dropout).to(device)
 
-      if weights_path:
-        if quant and jit:               # 量子化モデルを使った推論
-            model = torch.jit.load(weights_path)
-        elif weights_path.endswith('weights'):
-            model.load_darknet_weights(weights_path)
-        else:       # pt file
-            model.load_state_dict(torch.load(weights_path, map_location=device))
-
-      #print(model)
-      return model
+    #print(model)
+    return model
