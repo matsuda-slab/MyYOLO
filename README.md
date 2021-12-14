@@ -22,8 +22,14 @@
   python train.py --weights weights/yolov3-tiny.weights \
                   --data_root /home/matsuda/datasets/COCO_car/2014/ \
                   --num_classes 1 \
-                  --class_names coco_car.names \
+                  --class_names namefiles/coco_car.names \
                   --trans
+
+* Google_cars (4クラス) の モデルの精度検証
+  python test.py --weights weights/yolov3-tiny_car4.pt \
+                 --data_root /home/matsuda/datasets/Google_cars \
+                 --num_classes 4 \
+                 --class_names namefiles/google_cars.names \
 
 * 一番惜しい検出記録
   第1位
@@ -99,6 +105,11 @@
   results/20211118_165358/ のやつは, conf_thres=0.2 だといい感じ
 
   どちらも, iou_thres=0.3 だと二重検出しにくい
+
+* 車両検出 (最新) : results/20211123_172801/
+  -> weights/yolov3-tiny_car4.pt
+
+* 車両検出 (1クラス; 最新) : results/20211201_125135/
 
 
 ## Gitでの衝突を避けるための, 編集ルール

@@ -1082,7 +1082,7 @@ def load_model(weights_path, device, tiny=True, num_classes=80, trans=False, res
           return model, param_to_update
 
         elif finetune:
-          model = YOLO_sep(80).to(device) if use_sep else YOLO(80, dropout).to(device)
+          model = YOLO_sep(80).to(device) if use_sep else YOLO_tiny(80, dropout).to(device)
           if weights_path.endswith('weights'):
               model.load_darknet_weights(weights_path);
           else:
@@ -1101,7 +1101,7 @@ def load_model(weights_path, device, tiny=True, num_classes=80, trans=False, res
           return model
 
         else:           # 推論 or 一から学習
-          model = YOLO_sep(num_classes, dropout).to(device) if use_sep else YOLO(num_classes, quant, dropout).to(device)
+          model = YOLO_sep(num_classes, dropout).to(device) if use_sep else YOLO_tiny(num_classes, quant, dropout).to(device)
 
           if weights_path:
             if quant and jit:               # 量子化モデルを使った推論
