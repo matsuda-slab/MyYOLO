@@ -273,19 +273,24 @@ class YOLO_tiny(nn.Module):
         x = self.pool1(x)
         if self.en_dropout: x = self.dropout(x)
         x = self.conv2(x)
+        print("conv2 output :", x)
         x = self.pool2(x)
         if self.en_dropout: x = self.dropout(x)
         x = self.conv3(x)
+        print("conv3 output :", x)
         x = self.pool3(x)
         if self.en_dropout: x = self.dropout(x)
         x = self.conv4(x)
+        print("conv4 output :", x)
         x = self.pool4(x)
         if self.en_dropout: x = self.dropout(x)
         x = self.conv5(x)
+        print("conv5 output :", x)
         l8_output = x       # あとのconcat用に出力を保管
         x = self.pool5(x)
         if self.en_dropout: x = self.dropout(x)
         x = self.conv6(x)
+        print("conv6 output :", x)
         if self.enquant:
             x = self.dequant(x)
         x = self.zeropad(x)
@@ -297,13 +302,17 @@ class YOLO_tiny(nn.Module):
         #step2_t = time.time()
         # スケール大 検出部
         x = self.conv7(x)
+        print("conv7 output :", x)
         if self.en_dropout: x = self.dropout(x)
         x1 = self.conv8(x)
+        print("conv8 output :", x1)
         if self.en_dropout: x1 = self.dropout(x1)
         x2 = x1
         x1 = self.conv9(x1)
+        print("conv9 output :", x1)
         if self.en_dropout: x1 = self.dropout(x1)
         x1 = self.conv10(x1)
+        print("conv10 output :", x1)
         if self.enquant:
             x1 = self.dequant(x1)
         x1 = self.yolo1(x1)
@@ -816,8 +825,8 @@ class YOLO(nn.Module):
 class YOLO_sep(nn.Module):
     def __init__(self, num_classes):
         super(YOLO_sep, self).__init__()
-        self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
-        #self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
+        #self.anchors     = [[[10,14], [23,27], [37,58]], [[81,82], [135,169], [344,319]]]
+        self.anchors     = [[[23,27], [37,58], [81,82]], [[81,82], [135,169], [344,319]]]
         self.img_size    = 416
         self.num_classes = num_classes
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
@@ -1083,25 +1092,29 @@ def load_model(weights_path, device, tiny=True, num_classes=80, trans=False, res
 
         elif finetune:
           model = YOLO_sep(80).to(device) if use_sep else YOLO_tiny(80, dropout).to(device)
-          if weights_path.endswith('weights'):
-              model.load_darknet_weights(weights_path);
+          if restart:
+            weights = torch.load(weights_path, map_location=device)
+            model.load_state_dict(weights)
           else:
-              #model.load_weights(weights_path, device)
-              weights = torch.load(weights_path, map_location=device)
-              model.load_state_dict(weights)
-          # 最終層を置き換え
-          ylch = (5 + num_classes) * 3
-          model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-          model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
-          model.yolo1       = YOLOLayer(model.anchors[1], model.img_size, num_classes)
-          model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
-          model.yolo_layers = [model.yolo1, model.yolo2]
+            if weights_path.endswith('weights'):
+                model.load_darknet_weights(weights_path);
+            else:
+                #model.load_weights(weights_path, device)
+                weights = torch.load(weights_path, map_location=device)
+                model.load_state_dict(weights)
+            # 最終層を置き換え
+            ylch = (5 + num_classes) * 3
+            model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+            model.conv13.conv = nn.Conv2d(256, ylch, kernel_size=1, stride=1, padding=0, bias=1)
+            model.yolo1       = YOLOLayer(model.anchors[1], model.img_size, num_classes)
+            model.yolo2       = YOLOLayer(model.anchors[0], model.img_size, num_classes)
+            model.yolo_layers = [model.yolo1, model.yolo2]
 
-          model.to(device)
+            model.to(device)
           return model
 
         else:           # 推論 or 一から学習
-          model = YOLO_sep(num_classes, dropout).to(device) if use_sep else YOLO_tiny(num_classes, quant, dropout).to(device)
+          model = YOLO_sep(num_classes).to(device) if use_sep else YOLO_tiny(num_classes, quant, dropout).to(device)
 
           if weights_path:
             if quant and jit:               # 量子化モデルを使った推論

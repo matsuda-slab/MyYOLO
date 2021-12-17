@@ -31,6 +31,12 @@
                  --num_classes 4 \
                  --class_names namefiles/google_cars.names \
 
+* 数エポック学習し終わり, さらにもう一度数エポック学習する場合 (続きから学習)
+  -> --finetune
+     --weights {いったん学習し終えたモデル}
+     --restart
+     を入れる
+
 * 一番惜しい検出記録
   第1位
   python detect.py --weights results/20210930_115457/yolo-tiny.pt \
