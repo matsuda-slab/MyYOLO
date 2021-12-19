@@ -13,8 +13,6 @@ import sys
 import argparse
 import numpy as np
 import random
-#import torch.nn as nn
-#import torch.nn.functional as F
 import cv2
 from utils.utils_tf import non_max_suppression
 import time
@@ -42,7 +40,9 @@ NO_GPU       = args.nogpu
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #if NO_GPU:
 #    device = torch.device("cpu")
-#tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+#tensor_type = torch.cuda.FloatTensor
+#                   if torch.cuda.is_available()
+#                   else torch.FloatTensor
 
 # クラスファイルからクラス名を読み込む
 class_names = []
@@ -91,7 +91,8 @@ print("nms_boxes :", nms_boxes.shape)
 #boxes[:, 3] = boxes[:, 2] / 416.0
 #boxes  = boxes[:, [1,0,3,2]]
 #scores = output[0][0][:, 4]
-#selected_indices = tf.image.non_max_suppression(boxes, scores, 200, iou_threshold=0.3, score_threshold=0.01)
+#selected_indices = tf.image.non_max_suppression(boxes, scores, 200,
+#                                    iou_threshold=0.3, score_threshold=0.01)
 #
 nms_t = time.time()
 #
@@ -127,8 +128,10 @@ unpad_boxes[:, 3] = ((nms_boxes[:, 3] - pad_y // 2) / unpad_h) * orig_h
 
 ### クラスによって描く色を決める
 #cmap = plt.get_cmap('tab20b')       # tab20b はカラーマップの種類の1つ
-#colors = [cmap(i) for i in np.linspace(0, 1, NUM_CLASSES)]  # cmap をリスト化 (80分割)
-#bbox_colors = random.sample(colors, NUM_CLASSES)     # カラーをランダムに並び替え (任意)
+# cmap をリスト化 (80分割)
+#colors = [cmap(i) for i in np.linspace(0, 1, NUM_CLASSES)]
+# カラーをランダムに並び替え (任意)
+#bbox_colors = random.sample(colors, NUM_CLASSES)
 
 ### 推論結果(x_min, y_min, x_max, y_max, confidence, class) をもとに
 ### 描画する矩形とラベルを作成する
@@ -138,13 +141,17 @@ for x_min, y_min, x_max, y_max in unpad_boxes:
 
     #color = bbox_colors[int(class_pred)]
     ## patches を使うと, 図の上に図形をかける?
-    #bbox = patches.Rectangle((x_min, y_min), box_w, box_h, linewidth=2, edgecolor=color, facecolor='None')
+    #bbox = patches.Rectangle((x_min, y_min), box_w, box_h, linewidth=2,
+    #                            edgecolor=color, facecolor='None')
     #ax.add_patch(bbox)
 
     ## ラベル
-    #plt.text(x_min, y_min, s=class_names[int(class_pred)], color='white', verticalalignment='top', bbox={'color': color, 'pad':0})
-    cv2.rectangle(input_image, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
-    cv2.putText(input_image, 'doll', (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
+    #plt.text(x_min, y_min, s=class_names[int(class_pred)], color='white',
+    #               verticalalignment='top', bbox={'color': color, 'pad':0})
+    cv2.rectangle(input_image, (int(x_min), int(y_min)),
+                            (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
+    cv2.putText(input_image, 'doll', (int(x_min), int(y_min)),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
 
 end = time.time()
 print("elapsed time = %.4f sec" % (end - start))
@@ -156,7 +163,7 @@ print(" nms : %.4f sec" % (nms_t - inference_t))
 print(" plot : %.4f sec" % (end - nms_t))
 
 # 描画する
-#plt.axis("off")     # 軸をオフにする
+#plt.axis("off")
 #plt.savefig(output_path)
 #plt.close()
 cv2.imshow('image', input_image)

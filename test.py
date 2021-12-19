@@ -4,15 +4,10 @@ import os
 import sys
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import random
-import torch.nn as nn
-import torch.nn.functional as F
-from torchvision import transforms
-from PIL import Image
-from model import YOLO, load_model
-from utils.utils import non_max_suppression, xywh2xyxy, get_batch_statistics, ap_per_class
+from model import load_model
+from utils.utils import non_max_suppression, xywh2xyxy,
+                        get_batch_statistics, ap_per_class
 import tqdm
 
 parser = argparse.ArgumentParser()
@@ -31,8 +26,9 @@ args = parser.parse_args()
 
 IMG_SIZE     = 416
 DATA_ROOT    = args.data_root
-VALID_PATH   = DATA_ROOT + '/5k.txt' if 'COCO' in DATA_ROOT else DATA_ROOT + '/test.txt'
-
+VALID_PATH   = DATA_ROOT + '/5k.txt' 
+                if 'COCO' in DATA_ROOT 
+                else DATA_ROOT + '/test.txt'
 BATCH_SIZE   = args.batch_size
 weights_path = args.weights
 conf_thres   = args.conf_thres
@@ -45,7 +41,9 @@ EN_TINY      = not args.notiny
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if args.nogpu:
     device = torch.device("cpu")
-tensor_type = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+tensor_type = torch.cuda.FloatTensor 
+                if torch.cuda.is_available() 
+                else torch.FloatTensor
 if args.nogpu:
     tensor_type = torch.FloatTensor
 
@@ -55,10 +53,8 @@ with open(class_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-#model = YOLO(num_classes=1)
-#model.load_state_dict(torch.load(weights_path, map_location=device))
-#model.to(device)
-model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES, quant=args.quant)
+model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES,
+                    quant=args.quant)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(
@@ -95,7 +91,8 @@ for _, images, targets in tqdm.tqdm(dataloader):
     sample_metrics += get_batch_statistics(outputs, targets, iou_thres)
 
 # クラスごとの AP を算出する
-TP, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+TP, pred_scores, pred_labels 
+    = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
 metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
 # mAP を算出する

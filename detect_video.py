@@ -5,12 +5,9 @@ import sys
 import argparse
 import numpy as np
 import random
-import torch.nn as nn
-import torch.nn.functional as F
 from torchvision import transforms
-from PIL import Image
 import cv2
-from model import YOLO, load_model
+from model import load_model
 from utils.utils import non_max_suppression
 
 parser = argparse.ArgumentParser()
@@ -34,7 +31,9 @@ NO_GPU       = args.nogpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if NO_GPU or args.quant:
     device = torch.device("cpu")
-tensor_type = torch.cuda.FloatTensor if (torch.cuda.is_available() and not NO_GPU) else torch.FloatTensor
+tensor_type = torch.cuda.FloatTensor
+                if (torch.cuda.is_available() and not NO_GPU)
+                else torch.FloatTensor
 if args.quant:
     tensor_type = torch.ByteTensor
 
@@ -44,7 +43,8 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
+model = load_model(weights_path, device, num_classes=NUM_CLASSES,
+                    quant=args.quant, jit=True)
 
 # 動画の読み込み
 cap = cv2.VideoCapture(args.video)
@@ -96,8 +96,11 @@ while(cap.isOpened()):
         box_w = x_max - x_min
         box_h = y_max - y_min
 
-        cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 255), thickness=2)
-        cv2.putText(frame, class_names[int(class_pred)], (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=(0, 0, 255), thickness=2)
+        cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)),
+                                                    (0, 0, 255), thickness=2)
+        cv2.putText(frame, class_names[int(class_pred)],
+                    (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                    color=(0, 0, 255), thickness=2)
 
     #cv2.resize(frame, fx=0.5, fy=0.5)
     cv2.imshow('frame', frame)
