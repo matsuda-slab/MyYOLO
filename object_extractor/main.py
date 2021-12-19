@@ -29,6 +29,7 @@ parser.add_argument('--save_thres', type=int, default=20000)
 parser.add_argument('--interval', type=int, default=120)
 parser.add_argument('--show', action='store_true', default=False)
 parser.add_argument('--nosave', action='store_true', default=False)
+parser.add_argument('--debug', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = '../weights/yolov3.weights'
@@ -110,13 +111,13 @@ for frame in cap:           # frame は RGB
         image = image[[2,1,0],:,:]
         image = image.unsqueeze(0)
         end_t = time.time()
-        print("preprocess : %.4f sec" % (end_t - start_t))
+        if args.debug: print("preprocess : %.4f sec" % (end_t - start_t))
 
         start_t = time.time()
         model.eval()
         output = model(image)
         end_t = time.time()
-        print("inferrence : %.4f sec" % (end_t - start_t))
+        if args.debug: print("inferrence : %.4f sec" % (end_t - start_t))
 
         start_t = time.time()
         output = non_max_suppression(output, conf_thres, nms_thres)
@@ -133,7 +134,7 @@ for frame in cap:           # frame は RGB
         output[:, 2] = ((output[:, 2] - pad_x // 2) / unpad_w) * orig_w
         output[:, 3] = ((output[:, 3] - pad_y // 2) / unpad_h) * orig_h
         end_t = time.time()
-        print("postprocess : %.4f sec" % (end_t - start_t))
+        if args.debug: print("postprocess : %.4f sec" % (end_t - start_t))
 
         start_t = time.time()
         for x_min, y_min, x_max, y_max, conf, class_pred in output:
@@ -157,7 +158,7 @@ for frame in cap:           # frame は RGB
                         diff_back[i][j] = diff[i][j]
                 detect_flag = 1
         end_t = time.time()
-        print("drawing : %.4f sec" % (end_t - start_t))
+        if args.debug: print("drawing : %.4f sec" % (end_t - start_t))
 
         if detect_flag:
             #print("diff.shape :", diff.shape)
@@ -167,14 +168,14 @@ for frame in cap:           # frame は RGB
                 diff_back = cv2.resize(diff_back, dsize=None, fx=0.3, fy=0.3)
                 cv2.imshow("mask", diff_back)
                 end_t = time.time()
-                print("show (mask) : %.4f sec" % (end_t - start_t))
+                if args.debug: print("show (mask) : %.4f sec" % (end_t - start_t))
             if save_thres < np.sum(diff_back):
                 if args.show:
                     start_t = time.time()
                     frame_cv_input = cv2.resize(frame_cv_input, dsize=None, fx=0.5, fy=0.5)
                     cv2.imshow('frame_saved', frame_cv_input)
                     end_t = time.time()
-                    print("show (detected) : %.4f sec" % (end_t - start_t))
+                    if args.debug: print("show (detected) : %.4f sec" % (end_t - start_t))
                 if not args.nosave:
                     image_path = os.path.join(SAVE_DIR, f"{image_cnt:05}.jpg")
                     cv2.imwrite(image_path, frame_cv)
@@ -192,9 +193,9 @@ for frame in cap:           # frame は RGB
         frame_cv = cv2.resize(frame_cv, dsize=None, fx=0.5, fy=0.5)
         cv2.imshow('frame', frame_cv)
         end_t = time.time()
-        print("show (original) : %.4f sec" % (end_t - start_t))
+        if args.debug: print("show (original) : %.4f sec" % (end_t - start_t))
     frame_cnt = frame_cnt + 1
-    #progress_bar(frame_cnt, frames)
+    if not args.debug: progress_bar(frame_cnt, frames)
 
 print('\n')
 cv2.destroyAllWindows()

@@ -19,6 +19,7 @@ from utils.utils import non_max_suppression
 import time
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--model', default=None)
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--image', default='images/dog.jpg')
 parser.add_argument('--conf_thres', type=float, default=0.5)
@@ -40,6 +41,7 @@ NUM_CLASSES  = args.num_classes
 name_file    = args.class_names
 NO_GPU       = args.nogpu
 EN_TINY      = not args.notiny
+SEP          = True if args.model == "sep" else False
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if NO_GPU or args.quant:
@@ -54,7 +56,7 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES, quant=args.quant, jit=True)
+model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES, quant=args.quant, jit=True, use_sep=SEP)
 
 # 画像パスから入力画像データに変換
 start = time.time();
