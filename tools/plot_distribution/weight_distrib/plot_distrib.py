@@ -1,3 +1,8 @@
+"""
+パラメータの値の範囲のカウントをファイルに出力する.
+同時に, パラメータのすべての値を, レイヤごとにファイルに出力する
+"""
+
 import os, sys
 import torch
 import argparse

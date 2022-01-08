@@ -1,3 +1,7 @@
+"""
+.weights 形式のパラメータファイルをロードし, 内容を標準出力に出力する
+"""
+
 import numpy as np
 import torch
 
