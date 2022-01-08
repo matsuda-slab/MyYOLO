@@ -32,6 +32,8 @@ parser.add_argument('--nosave', action='store_true', default=False)
 parser.add_argument('--debug', action='store_true', default=False)
 args = parser.parse_args()
 
+debug = False
+
 weights_path = '../weights/yolov3.weights'
 SAVE_DIR     = args.savedir
 conf_thres   = 0.5
