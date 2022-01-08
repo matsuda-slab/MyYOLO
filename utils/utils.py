@@ -10,6 +10,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+def autolabel(graph):
+    for rect in graph:
+        height = rect.get_height()
+        plt.annotate('{}%'.format(height),
+                xy=(rect.get_x() + rect.get_width() / 2, height),
+                ha='center', va='bottom'
+        )
+
 def plot_graph(loss, rng, output_path, label="loss"):
     graph = plt.figure()
     plt.plot(range(rng), loss, label=label)
@@ -17,6 +25,26 @@ def plot_graph(loss, rng, output_path, label="loss"):
     plt.grid()
     #plt.show()
     graph.savefig(output_path)
+
+def plot_distrib(array):
+    array_percent = np.zeros(9)
+    for i in range(9):
+        array_percent[i] = np.round((array[i+1] / array[0]) * 10000) / 100.0
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    label = ["[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)","[16,32)","[32,64)","[64,128)","[128,"]
+    ax.set_ylim(0, 100)
+    ax.set_xlabel("Absolute value")
+    ax.set_ylabel("[%]")
+    plt.xticks(size=8)
+    color='#bf7fff'
+
+    graph = ax.bar(label, array_percent, label="activation distribution", color=color)
+    autolabel(graph)
+    ax.legend(loc="upper right")
+
+    fig.savefig("activate_distrib.png")
+
 
 """
 # 推論結果と教師ラベルから, 損失計算

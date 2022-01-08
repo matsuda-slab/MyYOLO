@@ -5,19 +5,19 @@ import sys
 import argparse
 import numpy as np
 import matplotlib
-#matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
 from torchvision import transforms
 import cv2
 from model import load_model
-from utils.utils import non_max_suppression
+from utils.utils import non_max_suppression, plot_distrib
 import time
+#matplotlib.use('TkAgg')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default=None)
-parser.add_argument('--weights', default='weights/tiny-yolo.model')
+parser.add_argument('--weights', default='weights/yolov3-tiny.pt')
 parser.add_argument('--image', default='images/dog.jpg')
 parser.add_argument('--conf_thres', type=float, default=0.5)
 parser.add_argument('--nms_thres', type=float, default=0.4)
@@ -27,6 +27,7 @@ parser.add_argument('--class_names', default='namefiles/coco.names')
 parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
 parser.add_argument('--notiny', action='store_true', default=False)
+parser.add_argument('--distrib', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -43,9 +44,9 @@ SEP          = True if args.model == "sep" else False
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if NO_GPU or args.quant:
     device = torch.device("cpu")
-tensor_type = torch.cuda.FloatTensor
+tensor_type = (torch.cuda.FloatTensor
                 if (torch.cuda.is_available() and not NO_GPU)
-                else torch.FloatTensor
+                else torch.FloatTensor)
 if args.quant:
     tensor_type = torch.ByteTensor
 
@@ -79,7 +80,23 @@ image_convert_t = time.time()
 # 入力画像からモデルによる推論を実行する
 model.eval()
 
-output = model(image)       # 出力座標は 0~1 の値
+activate_distrib = np.zeros(10)
+output = model(image, distri_array=activate_distrib, debug=False)       # 出力座標は 0~1 の値
+print("output :", output.shape)
+
+if args.distrib:
+    print("all :", activate_distrib[0])
+    print("distrib :", "%.2f" % ((activate_distrib[1] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[2] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[3] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[4] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[5] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[6] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[7] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[8] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[8] / activate_distrib[0]) * 100), "%")
+
+    plot_distrib(activate_distrib)
 
 inference_t = time.time()
 
@@ -90,7 +107,8 @@ output = non_max_suppression(output, conf_thres, nms_thres)
 nms_t = time.time()
 
 output = output[0]
-print("output :", output.shape)
+#print(output)
+#print("output :", output.shape)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]

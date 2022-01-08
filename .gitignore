@@ -2,7 +2,8 @@ result.png
 weights/*
 images
 __pycache__/
-output.jpg
+*.jpg
+*.png
 results/
 log
 yolov3-tiny.cfg

@@ -6,8 +6,9 @@ import argparse
 import numpy as np
 import random
 from model import load_model
-from utils.utils import non_max_suppression, xywh2xyxy,
-                        get_batch_statistics, ap_per_class
+from utils.utils import (non_max_suppression, xywh2xyxy,
+                        get_batch_statistics, ap_per_class,
+                        plot_distrib)
 import tqdm
 
 parser = argparse.ArgumentParser()
@@ -22,13 +23,14 @@ parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
 parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
 parser.add_argument('--notiny', action='store_true', default=False)
+parser.add_argument('--distrib', action='store_true', default=False)
 args = parser.parse_args()
 
 IMG_SIZE     = 416
 DATA_ROOT    = args.data_root
-VALID_PATH   = DATA_ROOT + '/5k.txt' 
+VALID_PATH   = (DATA_ROOT + '/5k.txt' 
                 if 'COCO' in DATA_ROOT 
-                else DATA_ROOT + '/test.txt'
+                else DATA_ROOT + '/test.txt')
 BATCH_SIZE   = args.batch_size
 weights_path = args.weights
 conf_thres   = args.conf_thres
@@ -41,9 +43,9 @@ EN_TINY      = not args.notiny
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if args.nogpu:
     device = torch.device("cpu")
-tensor_type = torch.cuda.FloatTensor 
+tensor_type = (torch.cuda.FloatTensor 
                 if torch.cuda.is_available() 
-                else torch.FloatTensor
+                else torch.FloatTensor)
 if args.nogpu:
     tensor_type = torch.FloatTensor
 
@@ -68,6 +70,7 @@ model.eval()
 
 labels         = []
 sample_metrics = []
+activate_distrib = np.zeros(10)
 for _, images, targets in tqdm.tqdm(dataloader):
     # ラベル(番号)をリスト化している (あとで必要なのだろう)
     labels += targets[:, 1].tolist()
@@ -79,7 +82,7 @@ for _, images, targets in tqdm.tqdm(dataloader):
     images = images.type(tensor_type)
 
     with torch.no_grad():
-        outputs = model(images)
+        outputs = model(images, distri_array=activate_distrib, debug=False)
         #""" debug """
         #with open("debug.txt", "a") as df:
         #    df.write(str(outputs[0, :, 2]))
@@ -91,7 +94,7 @@ for _, images, targets in tqdm.tqdm(dataloader):
     sample_metrics += get_batch_statistics(outputs, targets, iou_thres)
 
 # クラスごとの AP を算出する
-TP, pred_scores, pred_labels 
+TP, pred_scores, pred_labels \
     = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
 metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
@@ -105,3 +108,17 @@ for ap in ap_table:
 
 mAP = AP.mean() 
 print("mAP : %.5f" % mAP)
+
+if args.distrib:
+    print("all :", activate_distrib[0])
+    print("distrib :", "%.2f" % ((activate_distrib[1] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[2] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[3] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[4] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[5] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[6] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[7] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[8] / activate_distrib[0]) * 100), "%")
+    print("distrib :", "%.2f" % ((activate_distrib[8] / activate_distrib[0]) * 100), "%")
+
+    plot_distrib(activate_distrib)

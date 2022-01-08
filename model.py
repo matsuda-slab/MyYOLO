@@ -5,6 +5,7 @@ from torch.quantization import QuantStub, DeQuantStub
 from collections import OrderedDict
 import numpy as np
 import time
+import count_distribution as ditsrib
 
 # YOLOv3-tiny
 class YOLO_tiny(nn.Module):
@@ -128,118 +129,118 @@ class YOLO_tiny(nn.Module):
                                     param['module_list.0.BatchNorm2d.bias'])
         self.bn1.running_mean = param['module_list.0.BatchNorm2d.running_mean']
         self.bn1.running_var  = param['module_list.0.BatchNorm2d.running_var']
-        self.bn1.num_batches_tracked 
+        self.bn1.num_batches_tracked \
             = param['module_list.0.BatchNorm2d.num_batches_tracked']
-        self.conv2.weight     
+        self.conv2.weight \
             = nn.Parameter(param['module_list.2.Conv2d.weight'])
-        self.bn2.weight       
+        self.bn2.weight \
             = nn.Parameter(param['module_list.2.BatchNorm2d.weight'])
-        self.bn2.bias         
+        self.bn2.bias \
             = nn.Parameter(param['module_list.2.BatchNorm2d.bias'])
         self.bn2.running_mean = param['module_list.2.BatchNorm2d.running_mean']
         self.bn2.running_var  = param['module_list.2.BatchNorm2d.running_var']
-        self.bn2.num_batches_tracked 
+        self.bn2.num_batches_tracked \
             = param['module_list.2.BatchNorm2d.num_batches_tracked']
-        self.conv3.weight     
+        self.conv3.weight \
             = nn.Parameter(param['module_list.4.Conv2d.weight'])
-        self.bn3.weight       
+        self.bn3.weight \
             = nn.Parameter(param['module_list.4.BatchNorm2d.weight'])
-        self.bn3.bias         
+        self.bn3.bias \
             = nn.Parameter(param['module_list.4.BatchNorm2d.bias'])
         self.bn3.running_mean = param['module_list.4.BatchNorm2d.running_mean']
         self.bn3.running_var  = param['module_list.4.BatchNorm2d.running_var']
-        self.bn3.num_batches_tracked 
+        self.bn3.num_batches_tracked \
             = param['module_list.4.BatchNorm2d.num_batches_tracked']
-        self.conv4.weight     
+        self.conv4.weight \
             = nn.Parameter(param['module_list.6.Conv2d.weight'])
-        self.bn4.weight       
+        self.bn4.weight \
             = nn.Parameter(param['module_list.6.BatchNorm2d.weight'])
-        self.bn4.bias         
+        self.bn4.bias \
             = nn.Parameter(param['module_list.6.BatchNorm2d.bias'])
         self.bn4.running_mean = param['module_list.6.BatchNorm2d.running_mean']
         self.bn4.running_var  = param['module_list.6.BatchNorm2d.running_var']
-        self.bn4.num_batches_tracked 
+        self.bn4.num_batches_tracked \
             = param['module_list.6.BatchNorm2d.num_batches_tracked']
-        self.conv5.weight     
+        self.conv5.weight \
             = nn.Parameter(param['module_list.8.Conv2d.weight'])
-        self.bn5.weight       
+        self.bn5.weight \
             = nn.Parameter(param['module_list.8.BatchNorm2d.weight'])
-        self.bn5.bias         
+        self.bn5.bias \
             = nn.Parameter(param['module_list.8.BatchNorm2d.bias'])
         self.bn5.running_mean = param['module_list.8.BatchNorm2d.running_mean']
         self.bn5.running_var  = param['module_list.8.BatchNorm2d.running_var']
-        self.bn5.num_batches_tracked 
+        self.bn5.num_batches_tracked \
             = param['module_list.8.BatchNorm2d.num_batches_tracked']
-        self.conv6.weight     
+        self.conv6.weight \
             = nn.Parameter(param['module_list.10.Conv2d.weight'])
-        self.bn6.weight       
+        self.bn6.weight \
             = nn.Parameter(param['module_list.10.BatchNorm2d.weight'])
-        self.bn6.bias         
+        self.bn6.bias \
             = nn.Parameter(param['module_list.10.BatchNorm2d.bias'])
         self.bn6.running_mean = param['module_list.10.BatchNorm2d.running_mean']
         self.bn6.running_var  = param['module_list.10.BatchNorm2d.running_var']
-        self.bn6.num_batches_tracked 
+        self.bn6.num_batches_tracked \
             = param['module_list.10.BatchNorm2d.num_batches_tracked']
 
-        self.conv7.weight     
+        self.conv7.weight \
             = nn.Parameter(param['module_list.12.Conv2d.weight'])
-        self.bn7.weight       
+        self.bn7.weight \
             = nn.Parameter(param['module_list.12.BatchNorm2d.weight'])
-        self.bn7.bias         
+        self.bn7.bias \
             = nn.Parameter(param['module_list.12.BatchNorm2d.bias'])
         self.bn7.running_mean = param['module_list.12.BatchNorm2d.running_mean']
         self.bn7.running_var  = param['module_list.12.BatchNorm2d.running_var']
-        self.bn7.num_batches_tracked 
+        self.bn7.num_batches_tracked \
             = param['module_list.12.BatchNorm2d.num_batches_tracked']
-        self.conv8.weight     
+        self.conv8.weight \
             = nn.Parameter(param['module_list.13.Conv2d.weight'])
-        self.bn8.weight       
+        self.bn8.weight \
             = nn.Parameter(param['module_list.13.BatchNorm2d.weight'])
-        self.bn8.bias         
+        self.bn8.bias \
             = nn.Parameter(param['module_list.13.BatchNorm2d.bias'])
         self.bn8.running_mean = param['module_list.13.BatchNorm2d.running_mean']
         self.bn8.running_var  = param['module_list.13.BatchNorm2d.running_var']
-        self.bn8.num_batches_tracked 
+        self.bn8.num_batches_tracked \
             = param['module_list.13.BatchNorm2d.num_batches_tracked']
-        self.conv9.weight     
+        self.conv9.weight \
             = nn.Parameter(param['module_list.14.Conv2d.weight'])
-        self.bn9.weight       
+        self.bn9.weight \
             = nn.Parameter(param['module_list.14.BatchNorm2d.weight'])
-        self.bn9.bias         
+        self.bn9.bias \
             = nn.Parameter(param['module_list.14.BatchNorm2d.bias'])
         self.bn9.running_mean = param['module_list.14.BatchNorm2d.running_mean']
         self.bn9.running_var  = param['module_list.14.BatchNorm2d.running_var']
-        self.bn9.num_batches_tracked 
+        self.bn9.num_batches_tracked \
             = param['module_list.14.BatchNorm2d.num_batches_tracked']
 
-        self.conv10.weight    
+        self.conv10.weight \
             = nn.Parameter(param['module_list.15.Conv2d.weight'])
         self.conv10.bias      = nn.Parameter(param['module_list.15.Conv2d.bias'])
 
-        self.conv11.weight     
+        self.conv11.weight \
             = nn.Parameter(param['module_list.18.Conv2d.weight'])
-        self.bn10.weight       
+        self.bn10.weight \
             = nn.Parameter(param['module_list.18.BatchNorm2d.weight'])
-        self.bn10.bias         
+        self.bn10.bias \
             = nn.Parameter(param['module_list.18.BatchNorm2d.bias'])
-        self.bn10.running_mean 
+        self.bn10.running_mean \
             = param['module_list.18.BatchNorm2d.running_mean']
         self.bn10.running_var  = param['module_list.18.BatchNorm2d.running_var']
-        self.bn10.num_batches_tracked 
+        self.bn10.num_batches_tracked \
             = param['module_list.18.BatchNorm2d.num_batches_tracked']
-        self.conv12.weight     
+        self.conv12.weight \
             = nn.Parameter(param['module_list.21.Conv2d.weight'])
-        self.bn11.weight       
+        self.bn11.weight \
             = nn.Parameter(param['module_list.21.BatchNorm2d.weight'])
-        self.bn11.bias         
+        self.bn11.bias \
             = nn.Parameter(param['module_list.21.BatchNorm2d.bias'])
-        self.bn11.running_mean 
+        self.bn11.running_mean \
             = param['module_list.21.BatchNorm2d.running_mean']
         self.bn11.running_var  = param['module_list.21.BatchNorm2d.running_var']
-        self.bn11.num_batches_tracked 
+        self.bn11.num_batches_tracked \
             = param['module_list.21.BatchNorm2d.num_batches_tracked']
 
-        self.conv13.weight    
+        self.conv13.weight \
             = nn.Parameter(param['module_list.22.Conv2d.weight'])
         self.conv13.bias      = nn.Parameter(param['module_list.22.Conv2d.bias'])
 
@@ -328,34 +329,45 @@ class YOLO_tiny(nn.Module):
         ptr = self.set_conv_biases(self.conv13.conv, weights, ptr)
         ptr = self.set_conv_weights(self.conv13.conv, weights, ptr)
 
-    def forward(self, x, debug=False):
+    def forward(self, x, distri_array=None, debug=False):
         yolo_outputs = []
 
         #step1_t = time.time()
         # 特徴抽出部
         if self.enquant: x = self.quant(x)
         x = self.conv1(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool1(x)
         if self.en_dropout: x = self.dropout(x)
+
         x = self.conv2(x)
         if debug: print("conv2 output :", x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool2(x)
         if self.en_dropout: x = self.dropout(x)
+
         x = self.conv3(x)
         if debug: print("conv3 output :", x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool3(x)
         if self.en_dropout: x = self.dropout(x)
+
         x = self.conv4(x)
         if debug: print("conv4 output :", x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool4(x)
         if self.en_dropout: x = self.dropout(x)
+
         x = self.conv5(x)
         if debug: print("conv5 output :", x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         l8_output = x       # あとのconcat用に出力を保管
         x = self.pool5(x)
         if self.en_dropout: x = self.dropout(x)
+
         x = self.conv6(x)
         if debug: print("conv6 output :", x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         if self.enquant:
             x = self.dequant(x)
         x = self.zeropad(x)
@@ -368,16 +380,23 @@ class YOLO_tiny(nn.Module):
         # スケール大 検出部
         x = self.conv7(x)
         if debug: print("conv7 output :", x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         if self.en_dropout: x = self.dropout(x)
+
         x1 = self.conv8(x)
         if debug: print("conv8 output :", x1)
+        if distri_array is not None: ditsrib.count(distri_array, x1)
         if self.en_dropout: x1 = self.dropout(x1)
         x2 = x1
+
         x1 = self.conv9(x1)
         if debug: print("conv9 output :", x1)
+        if distri_array is not None: ditsrib.count(distri_array, x1)
         if self.en_dropout: x1 = self.dropout(x1)
+
         x1 = self.conv10(x1)
         if debug: print("conv10 output :", x1)
+        if distri_array is not None: ditsrib.count(distri_array, x1)
         if self.enquant:
             x1 = self.dequant(x1)
         x1 = self.yolo1(x1)
@@ -386,18 +405,27 @@ class YOLO_tiny(nn.Module):
         #step3_t = time.time()
         # スケール中 検出部
         x2 = self.conv11(x2)
+        if distri_array is not None: ditsrib.count(distri_array, x2)
         if self.en_dropout: x2 = self.dropout(x2)
+
         x2 = self.upsample(x2)
         # チャネル数方向に特徴マップを結合
         x2 = torch.cat([x2, l8_output], dim=1)
+
         x2 = self.conv12(x2)
+        if distri_array is not None: ditsrib.count(distri_array, x2)
         if self.en_dropout: x2 = self.dropout(x2)
+
         x2 = self.conv13(x2)
+        if distri_array is not None: ditsrib.count(distri_array, x2)
         if self.enquant:
             x2 = self.dequant(x2)
         x2 = self.yolo2(x2)
         yolo_outputs.append(x2)
 
+        #print("yolo_outputs.shape :", yolo_outputs[0].shape)
+        #print("yolo_outputs.shape :", yolo_outputs[1].shape)
+        #print("torch.cat.shape :", torch.cat(yolo_outputs, 1).shape)
         #last_t = time.time()
 
         #if not self.training:
@@ -947,7 +975,7 @@ class YOLO_sep(nn.Module):
     def __init__(self, num_classes):
         super(YOLO_sep, self).__init__()
         #self.anchors     = [[[10,14], [23,27], [37,58]],
-                             [[81,82], [135,169], [344,319]]]
+        #                    [[81,82], [135,169], [344,319]]]
         self.anchors     = [[[23,27], [37,58], [81,82]],
                             [[81,82], [135,169], [344,319]]]
         self.img_size    = 416
@@ -1249,9 +1277,9 @@ def load_model(weights_path, device, tiny=True, num_classes=80, trans=False,
           return model, param_to_update
 
         elif finetune:
-          model = YOLO_sep(80).to(device) 
+          model = (YOLO_sep(80).to(device) 
                         if use_sep 
-                        else YOLO_tiny(80, dropout).to(device)
+                        else YOLO_tiny(80, dropout).to(device))
           if restart:
             weights = torch.load(weights_path, map_location=device)
             model.load_state_dict(weights)
@@ -1278,9 +1306,9 @@ def load_model(weights_path, device, tiny=True, num_classes=80, trans=False,
           return model
 
         else:           # 推論 or 一から学習
-          model = YOLO_sep(num_classes).to(device)
+          model = (YOLO_sep(num_classes).to(device)
                     if use_sep
-                    else YOLO_tiny(num_classes, quant, dropout).to(device)
+                    else YOLO_tiny(num_classes, quant, dropout).to(device))
 
           if weights_path:
             if quant and jit:               # 量子化モデルを使った推論
