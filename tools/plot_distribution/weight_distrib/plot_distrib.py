@@ -8,94 +8,74 @@ import torch
 import argparse
 import numpy as np
 
-sys.path.append('../')
+sys.path.append('../../../')
+import utils.count_distribution as distrib
 
-from model import load_model
-
-def count(array, param):
-    param_abs = abs(param)
-    if param_abs < 1:
-        array[0] = array[0] + 1
-    elif param_abs < 2:
-        array[1] = array[1] + 1
-    elif param_abs < 4:
-        array[2] = array[2] + 1
-    elif param_abs < 8:
-        array[3] = array[3] + 1
-    elif param_abs < 16:
-        array[4] = array[4] + 1
-    elif param_abs < 32:
-        array[5] = array[5] + 1
-    elif param_abs < 64:
-        array[6] = array[6] + 1
-    elif param_abs < 128:
-        array[7] = array[7] + 1
-    else:
-        print(param)
-        array[8] = array[8] + 1
+sys.path.append('../../../')
+from utils.utils import plot_distrib
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--weights', default='yolo-tiny_doll.pt')
-parser.add_argument('--num_classes', type=int, default=1)
+parser.add_argument('--weights', default='weights/yolov3-tiny/yolov3-tiny.pt')
+parser.add_argument('--savedir', default='yolov3-tiny')
+parser.add_argument('--mode', default='torch')
+parser.add_argument('--num_classes', type=int, default=80)
 args = parser.parse_args()
 
 weights_path = args.weights
 NUM_CLASSES  = args.num_classes
-quant        = True if 'quant' in weights_path else False
 
-# load model
-device = torch.device("cpu")
-model  = load_model(weights_path, device, num_classes=NUM_CLASSES, quant=quant)
+if args.mode == 'torch':
+    # load weight
+    params = torch.load(weights_path, map_location='cpu')
 
-keys   = str(model.state_dict().keys())
+    cnt_class_values = np.zeros(10).astype(int)
 
-cnt_class_values = np.zeros(9).astype(int)
+    for key in params.keys():
+        param = params[key]
+        if not "num_batches_tracked" in key:
+            if param is None:
+                continue
+            distrib.count(cnt_class_values, param)
 
-for key in model.state_dict().keys():
-    a = model.state_dict()[key]
-    if not "num_batches_tracked" in key:
+    print("[0-1) :", cnt_class_values[1])
+    print("[1-2) :", cnt_class_values[2])
+    print("[2-4) :", cnt_class_values[3])
+    print("[4-8) :", cnt_class_values[4])
+    print("[8-16) :", cnt_class_values[5])
+    print("[16-32) :", cnt_class_values[6])
+    print("[32-64) :", cnt_class_values[7])
+    print("[64-128) :", cnt_class_values[8])
+    print("[128 :", cnt_class_values[9])
+
+    plot_distrib(cnt_class_values, savedir=args.savedir, graph_name="weight_distribution")
+
+elif args.mode == 'numpy':
+    # load weight
+    params = np.load(weights_path, allow_pickle=True)
+    params = params.item()
+
+    cnt_class_values = np.zeros(10).astype(int)
+
+    for key in params.keys():
         print(key)
-        if a is None:
+        param = params[key]
+        if param is None:
             continue
-        output_path = os.path.join('params', str(key) + '.txt')
-        with open(output_path, "w") as f:
-            if (0 < a.dim()):
-                for aa in a:
-                    if (0 < aa.dim()):                              # conv.weight
-                        for aaa in aa:
-                            for aaaa in aaa:
-                                for aaaaa in aaaa:
-                                    if quant:
-                                        aaaaa = aaaaa.dequantize()
-                                    param = aaaaa.detach().numpy()
-                                    f.write(str(param) + '\n')
-                                    count(cnt_class_values, param)
-                    else:
-                        param = aa.detach().numpy()
-                        f.write(str(param) + '\n')                  # conv.bias, bn
-                        count(cnt_class_values, param)
-            else:                                                   # bn.bias, bn.nbt
-                param = a.detach().numpy()
-                f.write(str(a.detach().numpy()) + '\n')
-                count(cnt_class_values, param)
+        distrib.count_np(cnt_class_values, param)
 
-#with open('params_class_count.txt', "w") as f:
-with open('params_class_count.dat', "w") as f:
-    #f.write('[0, 1) : ' + str(cnt_class_values[0]) + '\n')
-    #f.write('[1, 2) : ' + str(cnt_class_values[1]) + '\n')
-    #f.write('[2, 4) : ' + str(cnt_class_values[2]) + '\n')
-    #f.write('[4, 8) : ' + str(cnt_class_values[3]) + '\n')
-    #f.write('[8, 16) : ' + str(cnt_class_values[4]) + '\n')
-    #f.write('[16, 32) : ' + str(cnt_class_values[5]) + '\n')
-    #f.write('[32, 64) : ' + str(cnt_class_values[6]) + '\n')
-    #f.write('[64, 128) : ' + str(cnt_class_values[7]) + '\n')
-    #f.write('[128, : ' + str(cnt_class_values[8]))
-    f.write('1 ' + str(cnt_class_values[0]) + '     # [0, 1)' + '\n')
-    f.write('2 ' + str(cnt_class_values[1]) + '     # [1, 2)' + '\n')
-    f.write('3 ' + str(cnt_class_values[2]) + '     # [2, 4)' + '\n')
-    f.write('4 ' + str(cnt_class_values[3]) + '     # [4, 8)' + '\n')
-    f.write('5 ' + str(cnt_class_values[4]) + '     # [8, 16)' + '\n')
-    f.write('6 ' + str(cnt_class_values[5]) + '     # [16, 32)' + '\n')
-    f.write('7 ' + str(cnt_class_values[6]) + '     # [32, 64)' + '\n')
-    f.write('8 ' + str(cnt_class_values[7]) + '     # [64, 128)' + '\n')
-    f.write('9 ' + str(cnt_class_values[8]) + '     # [128,')
+    print("[0-1) :", cnt_class_values[1])
+    print("[1-2) :", cnt_class_values[2])
+    print("[2-4) :", cnt_class_values[3])
+    print("[4-8) :", cnt_class_values[4])
+    print("[8-16) :", cnt_class_values[5])
+    print("[16-32) :", cnt_class_values[6])
+    print("[32-64) :", cnt_class_values[7])
+    print("[64-128) :", cnt_class_values[8])
+    print("[128 :", cnt_class_values[9])
+
+    plot_distrib(cnt_class_values, savedir=args.savedir, graph_name="weight_distribution")
+
+else:
+    print("args error: mode is either 'torch' or 'numpy'")
+    sys.exit(1)
+

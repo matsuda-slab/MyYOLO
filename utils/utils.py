@@ -15,7 +15,8 @@ def autolabel(graph):
         height = rect.get_height()
         plt.annotate('{}%'.format(height),
                 xy=(rect.get_x() + rect.get_width() / 2, height),
-                ha='center', va='bottom'
+                ha='center', va='bottom',
+                size=9
         )
 
 def plot_graph(loss, rng, output_path, label="loss"):
@@ -26,10 +27,11 @@ def plot_graph(loss, rng, output_path, label="loss"):
     #plt.show()
     graph.savefig(output_path)
 
-def plot_distrib(array):
+def plot_distrib(array, savedir, graph_name="activation_distribution"):
     array_percent = np.zeros(9)
     for i in range(9):
-        array_percent[i] = np.round((array[i+1] / array[0]) * 10000) / 100.0
+        #array_percent[i] = np.round((array[i+1] / array[0]) * 10000) / 100.0  # 小数点2桁
+        array_percent[i] = np.round((array[i+1] / array[0]) * 100000) / 1000.0 # 小数点3桁
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
     label = ["[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)","[16,32)","[32,64)","[64,128)","[128,"]
@@ -39,11 +41,13 @@ def plot_distrib(array):
     plt.xticks(size=8)
     color='#bf7fff'
 
-    graph = ax.bar(label, array_percent, label="activation distribution", color=color)
+    graph = ax.bar(label, array_percent, label=graph_name, color=color)
     autolabel(graph)
     ax.legend(loc="upper right")
 
-    fig.savefig("activate_distrib.png")
+    savepath = os.path.join(savedir, graph_name + ".png")
+
+    fig.savefig(savepath)
 
 
 """
