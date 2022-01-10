@@ -26,3 +26,4 @@ plot_params/layer_distribution/output_graph*
 tools/object_extractor/movies/
 tools/plot_distribution/weight_distrib/layer_distribution/output_graph*
 tools/plot_distribution/weight_distrib/layer_distribution/bn_weight*
+tools/plot_distribution/weight_distrib/weights/
