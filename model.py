@@ -1100,38 +1100,51 @@ class YOLO_sep(nn.Module):
         step1_t = time.time()
         # 特徴抽出部
         x = self.conv1(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool1(x)
         x = self.conv2(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool2(x)
         x = self.conv3(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool3(x)
         x = self.conv4(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool4(x)
         x = self.conv5(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         l8_output = x       # あとのconcat用に出力を保管
         x = self.pool5(x)
         x = self.conv6(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.zeropad(x)
         x = self.pool6(x)
 
         step2_t = time.time()
         # スケール大 検出部
         x = self.conv7(x)
+        if distri_array is not None: ditsrib.count(distri_array, x)
         x1 = self.conv8(x)
+        if distri_array is not None: ditsrib.count(distri_array, x1)
         x2 = x1
         x1 = self.conv9(x1)
+        if distri_array is not None: ditsrib.count(distri_array, x1)
         x1 = self.conv10(x1)
+        if distri_array is not None: ditsrib.count(distri_array, x1)
         x1 = self.yolo1(x1)
         yolo_outputs.append(x1)
 
         step3_t = time.time()
         # スケール中 検出部
         x2 = self.conv11(x2)
+        if distri_array is not None: ditsrib.count(distri_array, x2)
         x2 = self.upsample(x2)
         # チャネル数方向に特徴マップを結合
         x2 = torch.cat([x2, l8_output], dim=1)
         x2 = self.conv12(x2)
+        if distri_array is not None: ditsrib.count(distri_array, x2)
         x2 = self.conv13(x2)
+        if distri_array is not None: ditsrib.count(distri_array, x2)
         x2 = self.yolo2(x2)
         yolo_outputs.append(x2)
 
