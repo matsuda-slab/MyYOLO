@@ -82,7 +82,6 @@ model.eval()
 
 activate_distrib = np.zeros(10)
 output = model(image, distri_array=activate_distrib, debug=False)       # 出力座標は 0~1 の値
-print("output :", output.shape)
 
 if args.distrib:
     print("all :", activate_distrib[0])
@@ -108,7 +107,7 @@ nms_t = time.time()
 
 output = output[0]
 #print(output)
-#print("output :", output.shape)
+print("output :", output.shape)
 
 ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
 orig_h, orig_w = input_image.shape[0:2]

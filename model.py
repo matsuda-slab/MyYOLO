@@ -5,7 +5,7 @@ from torch.quantization import QuantStub, DeQuantStub
 from collections import OrderedDict
 import numpy as np
 import time
-import count_distribution as ditsrib
+import utils.count_distribution as ditsrib
 
 # YOLOv3-tiny
 class YOLO_tiny(nn.Module):
@@ -1094,7 +1094,7 @@ class YOLO_sep(nn.Module):
 
         self.yolo_layers = [self.yolo1, self.yolo2]
 
-    def forward(self, x):
+    def forward(self, x, distri_array=None, debug=False):
         yolo_outputs = []
 
         step1_t = time.time()
@@ -1228,7 +1228,7 @@ class ResBlock(nn.Module):
 
         return f + x
 
-def load_model(weights_path, device, tiny=True, num_classes=80, trans=False,
+def load_model(weights_path, device, num_classes=80, tiny=True, trans=False,
                restart=False, finetune=False, use_sep=False, quant=False,
                dropout=False, jit=False):
     model = None

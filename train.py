@@ -10,8 +10,8 @@ import argparse
 import os
 import tqdm
 import numpy as np
-from utils.utils import non_max_suppression, xywh2xyxy,
-                        get_batch_statistics, ap_per_class
+from utils.utils import (non_max_suppression, xywh2xyxy,
+                         get_batch_statistics, ap_per_class)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
@@ -39,12 +39,12 @@ DATA_ROOT    = args.data_root
 BATCH_SIZE   = args.batch_size
 EPOCHS       = args.epochs
 LR           = args.lr
-TRAIN_PATH   = DATA_ROOT + '/trainvalno5k.txt' 
+TRAIN_PATH   = (DATA_ROOT + '/trainvalno5k.txt' 
                     if 'COCO' in DATA_ROOT
-                    else DATA_ROOT + '/train.txt'
-VALID_PATH   = DATA_ROOT + '/5k.txt' 
+                    else DATA_ROOT + '/train.txt')
+VALID_PATH   = (DATA_ROOT + '/5k.txt' 
                     if 'COCO' in DATA_ROOT
-                    else DATA_ROOT + '/valid.txt'
+                    else DATA_ROOT + '/valid.txt')
 DECAY        = args.decay
 SUBDIVISION  = 2
 BURN_IN      = 1000
@@ -63,9 +63,9 @@ nms_thres    = args.valid_nms_thres
 conf_thres   = args.valid_conf_thres
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-tensor_type = torch.cuda.FloatTensor
+tensor_type = (torch.cuda.FloatTensor
                     if torch.cuda.is_available()
-                    else torch.FloatTensor
+                    else torch.FloatTensor)
 
 class_file = args.class_names
 class_names = []
@@ -93,7 +93,7 @@ if TRANS:
                                          finetune=FINETUNE, use_sep=SEP,
                                          dropout=dropout)
 else:
-    model = load_model(weights_path, device, NUM_CLASSES, trans=TRANS,
+    model = load_model(weights_path, device, NUM_CLASSES, tiny=True, trans=TRANS,
                        finetune=FINETUNE, use_sep=SEP, dropout=dropout)
 
 # 最適化アルゴリズム, 損失関数の定義
@@ -190,7 +190,7 @@ for epoch in range(EPOCHS):
 
             sample_metrics += get_batch_statistics(outputs, target, iou_thres)
 
-        TP, pred_scores, pred_labels 
+        TP, pred_scores, pred_labels \
                     = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
         metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 

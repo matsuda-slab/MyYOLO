@@ -13,6 +13,7 @@ import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/yolov3-tiny.weights')
+parser.add_argument('--model', default=None)
 parser.add_argument('--batch_size', type=int, default=8)
 parser.add_argument('--conf_thres', type=float, default=0.01)
 parser.add_argument('--nms_thres', type=float, default=0.4)
@@ -39,6 +40,7 @@ iou_thres    = args.iou_thres
 class_file   = args.class_names
 NUM_CLASSES  = args.num_classes
 EN_TINY      = not args.notiny
+USE_SEP      = True if args.model == 'sep' else False
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if args.nogpu:
@@ -56,7 +58,7 @@ with open(class_file, 'r') as f:
 
 # モデルファイルからモデルを読み込む
 model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES,
-                    quant=args.quant)
+                    use_sep=USE_SEP, quant=args.quant)
 
 # valid用のデータローダを作成する
 dataloader = _create_validation_data_loader(
