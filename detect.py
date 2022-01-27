@@ -15,19 +15,36 @@ from utils.utils import non_max_suppression, plot_distrib
 import time
 #matplotlib.use('TkAgg')
 
+def extract(target, inputs):
+    feature = None
+
+    def forward_hook(module, inputs, outputs):
+        global features
+        features = outputs.detach().clone()
+
+    handle = target.register_forward_hook(forward_hook)
+
+    model.eval()
+    model(inputs, distri_array=activate_distrib, debug=args.debug)
+
+    handle.remove()
+
+    return features
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default=None)
 parser.add_argument('--weights', default='weights/yolov3-tiny.pt')
-parser.add_argument('--image', default='images/dog.jpg')
-parser.add_argument('--conf_thres', type=float, default=0.5)
+parser.add_argument('--image', default='images/car29.jpg')
+parser.add_argument('--conf_thres', type=float, default=0.1)
 parser.add_argument('--nms_thres', type=float, default=0.4)
 parser.add_argument('--output_image', default='output.jpg')
-parser.add_argument('--num_classes', type=int, default=80)
-parser.add_argument('--class_names', default='namefiles/coco.names')
+parser.add_argument('--num_classes', type=int, default=1)
+parser.add_argument('--class_names', default='namefiles/car.names')
 parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
 parser.add_argument('--notiny', action='store_true', default=False)
 parser.add_argument('--distrib', action='store_true', default=False)
+parser.add_argument('--debug', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -81,7 +98,9 @@ image_convert_t = time.time()
 model.eval()
 
 activate_distrib = np.zeros(10)
-output = model(image, distri_array=activate_distrib, debug=False)       # 出力座標は 0~1 の値
+output = model(image, distri_array=activate_distrib, debug=args.debug)       # 出力座標は 0~1 の値
+
+l1_conv_dw_output = extract(model.conv1.conv_dw, image)
 
 if args.distrib:
     print("all :", activate_distrib[0])

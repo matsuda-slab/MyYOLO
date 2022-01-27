@@ -337,36 +337,49 @@ class YOLO_tiny(nn.Module):
         if self.enquant: x = self.quant(x)
         x = self.conv1(x)
         if distri_array is not None: ditsrib.count(distri_array, x)
+        #if debug: print("conv1 output :", x)
+        if debug: print("conv1 max :", torch.max(x))
+        if debug: print("conv1 min :", torch.min(x))
         x = self.pool1(x)
         if self.en_dropout: x = self.dropout(x)
 
         x = self.conv2(x)
-        if debug: print("conv2 output :", x)
+        #if debug: print("conv2 output :", x)
+        if debug: print("conv2 max :", torch.max(x))
+        if debug: print("conv2 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool2(x)
         if self.en_dropout: x = self.dropout(x)
 
         x = self.conv3(x)
-        if debug: print("conv3 output :", x)
+        #if debug: print("conv3 output :", x)
+        if debug: print("conv3 max :", torch.max(x))
+        if debug: print("conv3 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool3(x)
         if self.en_dropout: x = self.dropout(x)
 
         x = self.conv4(x)
-        if debug: print("conv4 output :", x)
+        #if debug: print("conv4 output :", x)
+        if debug: print("conv4 max :", torch.max(x))
+        if debug: print("conv4 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool4(x)
         if self.en_dropout: x = self.dropout(x)
 
         x = self.conv5(x)
-        if debug: print("conv5 output :", x)
+        #if debug: print("conv5 output :", x)
+        if debug: print("conv5 max :", torch.max(x))
+        if debug: print("conv5 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         l8_output = x       # あとのconcat用に出力を保管
         x = self.pool5(x)
         if self.en_dropout: x = self.dropout(x)
 
         x = self.conv6(x)
-        if debug: print("conv6 output :", x)
+        #if debug: print("conv6 output :", x)
+        if debug: print("conv6 max :", torch.max(x))
+        if debug: print("conv6 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         if self.enquant:
             x = self.dequant(x)
@@ -379,23 +392,31 @@ class YOLO_tiny(nn.Module):
         #step2_t = time.time()
         # スケール大 検出部
         x = self.conv7(x)
-        if debug: print("conv7 output :", x)
+        #if debug: print("conv7 output :", x)
+        if debug: print("conv7 max :", torch.max(x))
+        if debug: print("conv7 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         if self.en_dropout: x = self.dropout(x)
 
         x1 = self.conv8(x)
-        if debug: print("conv8 output :", x1)
+        #if debug: print("conv8 output :", x1)
+        if debug: print("conv8 max :", torch.max(x1))
+        if debug: print("conv8 min :", torch.min(x1))
         if distri_array is not None: ditsrib.count(distri_array, x1)
         if self.en_dropout: x1 = self.dropout(x1)
         x2 = x1
 
         x1 = self.conv9(x1)
-        if debug: print("conv9 output :", x1)
+        #if debug: print("conv9 output :", x1)
+        if debug: print("conv9 max :", torch.max(x1))
+        if debug: print("conv9 min :", torch.min(x1))
         if distri_array is not None: ditsrib.count(distri_array, x1)
         if self.en_dropout: x1 = self.dropout(x1)
 
         x1 = self.conv10(x1)
-        if debug: print("conv10 output :", x1)
+        #if debug: print("conv10 output :", x1)
+        if debug: print("conv10 max :", torch.max(x1))
+        if debug: print("conv10 min :", torch.min(x1))
         if distri_array is not None: ditsrib.count(distri_array, x1)
         if self.enquant:
             x1 = self.dequant(x1)
@@ -983,68 +1004,83 @@ class YOLO_sep(nn.Module):
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
 
         # modules
-        #self.conv1  = nn.Sequential(OrderedDict([
-        #                   ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
-        #                       groups=3,   stride=1, padding=1, bias=0)),  # dw
-        #                   ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
-        #                       stride=1, padding=0, bias=0)),              # pw
-        #                   ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-        #                   ('relu', nn.LeakyReLU(0.1))
-        #                   ]))
-        # 1層目のみ, 普通の3x3-conv
+        # 1層目を separable にしても意外と精度落ちないので採用
         self.conv1  = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(   3,   16, kernel_size=3,
-                                stride=1, padding=1, bias=0)),
-                            ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
-                            ]))
+                           ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
+                               groups=3,   stride=1, padding=1, bias=0)),  # dw
+                           ('bn_dw', nn.BatchNorm2d(  3, momentum=0.1, eps=1e-5)),
+                           ('relu_dw', nn.LeakyReLU(0.1)),
+                           ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
+                               stride=1, padding=0, bias=0)),              # pw
+                           ('bn_pw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+                           ('relu_pw', nn.LeakyReLU(0.1))
+                           ]))
+        # 1層目のみ, 普通の3x3-conv
+        #self.conv1  = nn.Sequential(OrderedDict([
+        #                    ('conv', nn.Conv2d(   3,   16, kernel_size=3,
+        #                        stride=1, padding=1, bias=0)),
+        #                    ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+        #                    ('relu', nn.LeakyReLU(0.1))
+        #                    ]))
         self.conv2  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d(  16,   16, kernel_size=3,
                                 groups=16,  stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d(  16,   32, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv3  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d(  32,   32, kernel_size=3,
                                 groups=32,  stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d(  32,   64, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d(  64, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d(  64, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv4  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d(  64,   64, kernel_size=3,
                                 groups=64,  stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d( 64, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d(  64,  128, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv5  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d( 128,  128, kernel_size=3,
                                 groups=128, stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d( 128,  256, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv6  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
                                 groups=256, stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv7  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d( 512,  512, kernel_size=3,
                                 groups=512, stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d( 512, 1024, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv8  = nn.Sequential(OrderedDict([
                             ('conv', nn.Conv2d(1024,  256, kernel_size=1,
@@ -1055,10 +1091,12 @@ class YOLO_sep(nn.Module):
         self.conv9  = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
                                 groups=256, stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv10 = nn.Conv2d(512, self.ylch, kernel_size=1,
                                 stride=1, padding=0, bias=1)
@@ -1071,10 +1109,12 @@ class YOLO_sep(nn.Module):
         self.conv12 = nn.Sequential(OrderedDict([
                             ('conv_dw', nn.Conv2d( 384,  384, kernel_size=3,
                                 groups=384, stride=1, padding=1, bias=0)),
+                            ('bn_dw', nn.BatchNorm2d( 384, momentum=0.1, eps=1e-5)),
+                            ('relu_dw', nn.LeakyReLU(0.1)),
                             ('conv_pw', nn.Conv2d( 384,  256, kernel_size=1,
                                 stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
+                            ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                            ('relu_pw', nn.LeakyReLU(0.1))
                             ]))
         self.conv13   = nn.Conv2d(256, self.ylch, kernel_size=1,
                                 stride=1, padding=0, bias=1)
@@ -1099,23 +1139,37 @@ class YOLO_sep(nn.Module):
 
         step1_t = time.time()
         # 特徴抽出部
+        #if debug: print("input:", x[0][0][200])
         x = self.conv1(x)
+        if debug: print("conv1 output :", x)
+        #if debug: print("conv1 max :", torch.max(x))
+        #if debug: print("conv1 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool1(x)
         x = self.conv2(x)
+        if debug: print("conv2 max :", torch.max(x))
+        if debug: print("conv2 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool2(x)
         x = self.conv3(x)
+        if debug: print("conv3 max :", torch.max(x))
+        if debug: print("conv3 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool3(x)
         x = self.conv4(x)
+        if debug: print("conv4 max :", torch.max(x))
+        if debug: print("conv4 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.pool4(x)
         x = self.conv5(x)
+        if debug: print("conv5 max :", torch.max(x))
+        if debug: print("conv5 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         l8_output = x       # あとのconcat用に出力を保管
         x = self.pool5(x)
         x = self.conv6(x)
+        if debug: print("conv6 max :", torch.max(x))
+        if debug: print("conv6 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x = self.zeropad(x)
         x = self.pool6(x)
@@ -1123,13 +1177,21 @@ class YOLO_sep(nn.Module):
         step2_t = time.time()
         # スケール大 検出部
         x = self.conv7(x)
+        if debug: print("conv7 max :", torch.max(x))
+        if debug: print("conv7 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
         x1 = self.conv8(x)
+        if debug: print("conv8 max :", torch.max(x1))
+        if debug: print("conv8 min :", torch.min(x1))
         if distri_array is not None: ditsrib.count(distri_array, x1)
         x2 = x1
         x1 = self.conv9(x1)
+        if debug: print("conv9 max :", torch.max(x1))
+        if debug: print("conv9 min :", torch.min(x1))
         if distri_array is not None: ditsrib.count(distri_array, x1)
         x1 = self.conv10(x1)
+        if debug: print("conv10 max :", torch.max(x1))
+        if debug: print("conv10 min :", torch.min(x1))
         if distri_array is not None: ditsrib.count(distri_array, x1)
         x1 = self.yolo1(x1)
         yolo_outputs.append(x1)

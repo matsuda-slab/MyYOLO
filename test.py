@@ -123,4 +123,4 @@ if args.distrib:
     print("distrib :", "%.2f" % ((activate_distrib[8] / activate_distrib[0]) * 100), "%")
     print("distrib :", "%.2f" % ((activate_distrib[8] / activate_distrib[0]) * 100), "%")
 
-    plot_distrib(activate_distrib)
+    plot_distrib(activate_distrib, savedir='tools/plot_distribution/activation_distrib')
