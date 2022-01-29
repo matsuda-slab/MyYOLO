@@ -993,7 +993,7 @@ class YOLO(nn.Module):
         return torch.cat(yolo_outputs, 1)
 
 class YOLO_sep(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, merge):
         super(YOLO_sep, self).__init__()
         #self.anchors     = [[[10,14], [23,27], [37,58]],
         #                    [[81,82], [135,169], [344,319]]]
@@ -1002,122 +1002,219 @@ class YOLO_sep(nn.Module):
         self.img_size    = 416
         self.num_classes = num_classes
         self.ylch        = (5 + self.num_classes) * 3       # yolo layer channels
+        self.merge       = merge
 
         # modules
-        # 1層目を separable にしても意外と精度落ちないので採用
-        self.conv1  = nn.Sequential(OrderedDict([
-                           ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
-                               groups=3,   stride=1, padding=1, bias=0)),  # dw
-                           ('bn_dw', nn.BatchNorm2d(  3, momentum=0.1, eps=1e-5)),
-                           ('relu_dw', nn.LeakyReLU(0.1)),
-                           ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
-                               stride=1, padding=0, bias=0)),              # pw
-                           ('bn_pw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-                           ('relu_pw', nn.LeakyReLU(0.1))
-                           ]))
-        # 1層目のみ, 普通の3x3-conv
-        #self.conv1  = nn.Sequential(OrderedDict([
-        #                    ('conv', nn.Conv2d(   3,   16, kernel_size=3,
-        #                        stride=1, padding=1, bias=0)),
-        #                    ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-        #                    ('relu', nn.LeakyReLU(0.1))
-        #                    ]))
-        self.conv2  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d(  16,   16, kernel_size=3,
-                                groups=16,  stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d(  16,   32, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv3  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d(  32,   32, kernel_size=3,
-                                groups=32,  stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d(  32,   64, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d(  64, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv4  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d(  64,   64, kernel_size=3,
-                                groups=64,  stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d( 64, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d(  64,  128, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv5  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d( 128,  128, kernel_size=3,
-                                groups=128, stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d( 128,  256, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv6  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
-                                groups=256, stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv7  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d( 512,  512, kernel_size=3,
-                                groups=512, stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d( 512, 1024, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv8  = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d(1024,  256, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv9  = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
-                                groups=256, stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv10 = nn.Conv2d(512, self.ylch, kernel_size=1,
-                                stride=1, padding=0, bias=1)
-        self.conv11 = nn.Sequential(OrderedDict([
-                            ('conv', nn.Conv2d( 256,  128, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
-                            ('relu', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv12 = nn.Sequential(OrderedDict([
-                            ('conv_dw', nn.Conv2d( 384,  384, kernel_size=3,
-                                groups=384, stride=1, padding=1, bias=0)),
-                            ('bn_dw', nn.BatchNorm2d( 384, momentum=0.1, eps=1e-5)),
-                            ('relu_dw', nn.LeakyReLU(0.1)),
-                            ('conv_pw', nn.Conv2d( 384,  256, kernel_size=1,
-                                stride=1, padding=0, bias=0)),
-                            ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                            ('relu_pw', nn.LeakyReLU(0.1))
-                            ]))
-        self.conv13   = nn.Conv2d(256, self.ylch, kernel_size=1,
-                                stride=1, padding=0, bias=1)
+        if self.merge:
+            # 1層目を separable にしても意外と精度落ちないので採用
+            self.conv1  = nn.Sequential(OrderedDict([
+                               ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
+                                   groups=3,   stride=1, padding=1, bias=1)),  # dw
+                               ('relu_dw', nn.LeakyReLU(0.1)),
+                               ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
+                                   stride=1, padding=0, bias=1)),              # pw
+                               ('relu_pw', nn.LeakyReLU(0.1))
+                               ]))
+            # 1層目のみ, 普通の3x3-conv
+            #self.conv1  = nn.Sequential(OrderedDict([
+            #                    ('conv', nn.Conv2d(   3,   16, kernel_size=3,
+            #                        stride=1, padding=1, bias=0)),
+            #                    ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+            #                    ('relu', nn.LeakyReLU(0.1))
+            #                    ]))
+            self.conv2  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d(  16,   16, kernel_size=3,
+                                    groups=16,  stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d(  16,   32, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv3  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d(  32,   32, kernel_size=3,
+                                    groups=32,  stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d(  32,   64, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv4  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d(  64,   64, kernel_size=3,
+                                    groups=64,  stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d(  64,  128, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv5  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 128,  128, kernel_size=3,
+                                    groups=128, stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 128,  256, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv6  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
+                                    groups=256, stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv7  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 512,  512, kernel_size=3,
+                                    groups=512, stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 512, 1024, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv8  = nn.Sequential(OrderedDict([
+                                ('conv', nn.Conv2d(1024,  256, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv9  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
+                                    groups=256, stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv10 = nn.Conv2d(512, self.ylch, kernel_size=1,
+                                    stride=1, padding=0, bias=1)
+            self.conv11 = nn.Sequential(OrderedDict([
+                                ('conv', nn.Conv2d( 256,  128, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv12 = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 384,  384, kernel_size=3,
+                                    groups=384, stride=1, padding=1, bias=1)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 384,  256, kernel_size=1,
+                                    stride=1, padding=0, bias=1)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv13   = nn.Conv2d(256, self.ylch, kernel_size=1,
+                                    stride=1, padding=0, bias=1)
+        else:
+            # 1層目を separable にしても意外と精度落ちないので採用
+            self.conv1  = nn.Sequential(OrderedDict([
+                               ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
+                                   groups=3,   stride=1, padding=1, bias=0)),  # dw
+                               #('bn_dw', nn.BatchNorm2d(  3, momentum=0.1, eps=1e-5)),
+                               #('relu_dw', nn.LeakyReLU(0.1)),
+                               ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
+                                   stride=1, padding=0, bias=0)),              # pw
+                               ('bn_pw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+                               ('relu_pw', nn.LeakyReLU(0.1))
+                               ]))
+            # 1層目のみ, 普通の3x3-conv
+            #self.conv1  = nn.Sequential(OrderedDict([
+            #                    ('conv', nn.Conv2d(   3,   16, kernel_size=3,
+            #                        stride=1, padding=1, bias=0)),
+            #                    ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+            #                    ('relu', nn.LeakyReLU(0.1))
+            #                    ]))
+            self.conv2  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d(  16,   16, kernel_size=3,
+                                    groups=16,  stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d(  16,   32, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv3  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d(  32,   32, kernel_size=3,
+                                    groups=32,  stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d(  32,   64, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d(  64, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv4  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d(  64,   64, kernel_size=3,
+                                    groups=64,  stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d( 64, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d(  64,  128, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv5  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 128,  128, kernel_size=3,
+                                    groups=128, stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 128,  256, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv6  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
+                                    groups=256, stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv7  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 512,  512, kernel_size=3,
+                                    groups=512, stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 512, 1024, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv8  = nn.Sequential(OrderedDict([
+                                ('conv', nn.Conv2d(1024,  256, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                ('relu', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv9  = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
+                                    groups=256, stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv10 = nn.Conv2d(512, self.ylch, kernel_size=1,
+                                    stride=1, padding=0, bias=1)
+            self.conv11 = nn.Sequential(OrderedDict([
+                                ('conv', nn.Conv2d( 256,  128, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
+                                ('relu', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv12 = nn.Sequential(OrderedDict([
+                                ('conv_dw', nn.Conv2d( 384,  384, kernel_size=3,
+                                    groups=384, stride=1, padding=1, bias=0)),
+                                #('bn_dw', nn.BatchNorm2d( 384, momentum=0.1, eps=1e-5)),
+                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('conv_pw', nn.Conv2d( 384,  256, kernel_size=1,
+                                    stride=1, padding=0, bias=0)),
+                                ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                ('relu_pw', nn.LeakyReLU(0.1))
+                                ]))
+            self.conv13   = nn.Conv2d(256, self.ylch, kernel_size=1,
+                                    stride=1, padding=0, bias=1)
         self.pool1    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool2    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool3    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -1303,9 +1400,9 @@ class ResBlock(nn.Module):
 
         return f + x
 
-def load_model(weights_path, device, num_classes=80, tiny=True, trans=False,
-               restart=False, finetune=False, use_sep=False, quant=False,
-               dropout=False, jit=False):
+def load_model(weights_path, device, num_classes=80, merge=False, tiny=True,
+               trans=False, restart=False, finetune=False, use_sep=False,
+               quant=False, dropout=False, jit=False):
     model = None
 
     # YOLO-tiny model
@@ -1381,7 +1478,7 @@ def load_model(weights_path, device, num_classes=80, tiny=True, trans=False,
           return model
 
         else:           # 推論 or 一から学習
-          model = (YOLO_sep(num_classes).to(device)
+          model = (YOLO_sep(num_classes, merge).to(device)
                     if use_sep
                     else YOLO_tiny(num_classes, quant, dropout).to(device))
 

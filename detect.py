@@ -45,6 +45,7 @@ parser.add_argument('--nogpu', action='store_true', default=False)
 parser.add_argument('--notiny', action='store_true', default=False)
 parser.add_argument('--distrib', action='store_true', default=False)
 parser.add_argument('--debug', action='store_true', default=False)
+parser.add_argument('--merge', action='store_true', default=False)
 args = parser.parse_args()
 
 weights_path = args.weights
@@ -57,6 +58,7 @@ name_file    = args.class_names
 NO_GPU       = args.nogpu
 EN_TINY      = not args.notiny
 SEP          = True if args.model == "sep" else False
+MERGE        = args.merge
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if NO_GPU or args.quant:
@@ -73,8 +75,9 @@ with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
 # モデルファイルからモデルを読み込む
-model = load_model(weights_path, device, tiny=EN_TINY, num_classes=NUM_CLASSES,
-                    quant=args.quant, jit=True, use_sep=SEP)
+model = load_model(weights_path, device, merge=MERGE, tiny=EN_TINY,
+                   num_classes=NUM_CLASSES, quant=args.quant, jit=True,
+                   use_sep=SEP)
 
 # 画像パスから入力画像データに変換
 start = time.time();
