@@ -28,3 +28,4 @@ tools/plot_distribution/weight_distrib/layer_distribution/output_graph*
 tools/plot_distribution/weight_distrib/layer_distribution/bn_weight*
 tools/plot_distribution/weight_distrib/weights/
 tools/fusion/Sandbox/weights/
+junkbox/
