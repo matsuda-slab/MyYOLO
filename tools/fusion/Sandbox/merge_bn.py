@@ -90,4 +90,4 @@ for now_layer in non_bn_layer:
     merge_weight_dict["conv"+str(now_layer)+".bias"] = params["conv"+str(now_layer)+".bias"]
 
 
-torch.save(merge_weight_dict,"./output/merge.pt")
+torch.save(merge_weight_dict,"./weights/merge.pt")
