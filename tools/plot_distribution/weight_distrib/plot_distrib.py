@@ -11,7 +11,7 @@ import numpy as np
 sys.path.append('../../../')
 import utils.count_distribution as distrib
 
-sys.path.append('../../../')
+#sys.path.append('../../../')
 from utils.utils import plot_distrib
 
 parser = argparse.ArgumentParser()

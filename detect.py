@@ -145,7 +145,7 @@ unpad_h = 416 - pad_y
 unpad_w = 416 - pad_x
 
 # 追加した(paddingした)情報を考慮した, 元画像サイズへの復元
-# (ここの式よくわからない)
+# (よくわかってない)
 output[:, 0] = ((output[:, 0] - pad_x // 2) / unpad_w) * orig_w
 output[:, 1] = ((output[:, 1] - pad_y // 2) / unpad_h) * orig_h
 output[:, 2] = ((output[:, 2] - pad_x // 2) / unpad_w) * orig_w
