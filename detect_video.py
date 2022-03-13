@@ -1,3 +1,7 @@
+#===============================================================================
+# Inferrence on an video or camera
+#===============================================================================
+
 from utils.transforms import Resize, DEFAULT_TRANSFORMS
 import torch
 import os
@@ -10,6 +14,9 @@ import cv2
 from model import load_model
 from utils.utils import non_max_suppression
 
+#===============================================================================
+# Process arguments
+#===============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights', default='weights/tiny-yolo.model')
 parser.add_argument('--video', default='images/car.mp4')
@@ -21,6 +28,9 @@ parser.add_argument('--quant', action='store_true', default=False)
 parser.add_argument('--nogpu', action='store_true', default=False)
 args = parser.parse_args()
 
+#===============================================================================
+# Define parameters
+#===============================================================================
 weights_path = args.weights
 conf_thres   = args.conf_thres
 nms_thres    = args.nms_thres
@@ -37,16 +47,16 @@ tensor_type = torch.cuda.FloatTensor
 if args.quant:
     tensor_type = torch.ByteTensor
 
-# クラスファイルからクラス名を読み込む
+# Load class names from name file
 class_names = []
 with open(name_file, 'r') as f:
     class_names = f.read().splitlines()
 
-# モデルファイルからモデルを読み込む
+# Create model
 model = load_model(weights_path, device, num_classes=NUM_CLASSES,
                     quant=args.quant, jit=True)
 
-# 動画の読み込み
+# Load video
 cap = cv2.VideoCapture(args.video)
 if not cap.isOpened():
     print("Can not open video\n")
@@ -60,38 +70,31 @@ while(cap.isOpened()):
         Resize(416)])((input_image, np.zeros((1,5))))[0].unsqueeze(0)
     image = image.to(device)
 
-    # 入力画像からモデルによる推論を実行する
+    # Inferrence on a frame
     model.eval()
-    output = model(image)       # 出力座標は 0~1 の値
+    output = model(image)       # output is in [0-1]
 
-    # 推論結果に NMS をかける
-    # ここの outputの出力座標 はすでに 0~416 にスケールされている
+    # Apply NMS
     output = non_max_suppression(output, conf_thres, nms_thres)
 
     output = output[0]
     print("output.shape :", output.shape)
 
-    ### 推論結果のボックスの位置(0~1)を元画像のサイズに合わせてスケールする
+    # Scale box coordinates according to the original size
     orig_h, orig_w = input_image.shape[0:2]
-    # 416 x 416 に圧縮したときに加えた情報量 (?) を算出
-    # 例えば, 640 x 480 を 416 x 416 にリサイズすると, 横の長さに合わせると
-    # 縦が 416 より小さくなってしまうので, y成分に情報を加えて, 416にしている
-    # と思われる. そのため, ここで加えた余分な情報を取り除く(量を決めるための)
-    # unpad_h, unpad_w を算出している
     pad_x = max(orig_h - orig_w, 0) * (416 / max(orig_h, orig_w))
     pad_y = max(orig_w - orig_h, 0) * (416 / max(orig_h, orig_w))
 
     unpad_h = 416 - pad_y
     unpad_w = 416 - pad_x
 
-    # 追加した(paddingした)情報を考慮した, 元画像サイズへの復元
-    # (ここの式よくわからない)
+    # Restore the original size in consideration of padding
     output[:, 0] = ((output[:, 0] - pad_x // 2) / unpad_w) * orig_w
     output[:, 1] = ((output[:, 1] - pad_y // 2) / unpad_h) * orig_h
     output[:, 2] = ((output[:, 2] - pad_x // 2) / unpad_w) * orig_w
     output[:, 3] = ((output[:, 3] - pad_y // 2) / unpad_h) * orig_h
 
-    # 描画 opencv バージョン
+    # Draw (OpenCV version)
     for x_min, y_min, x_max, y_max, conf, class_pred in output:
         box_w = x_max - x_min
         box_h = y_max - y_min

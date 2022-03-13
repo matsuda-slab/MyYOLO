@@ -1,5 +1,5 @@
 """
-.weights 形式のパラメータファイルをロードし, 内容を標準出力に出力する
+Load .weights format file and output to standard output.
 """
 
 import numpy as np
@@ -49,14 +49,13 @@ def set_conv_biases(self, layer, params, ptr):
     return ptr
 
 def load_darknet_weights(self, weights_path):
-    # バイナリファイルを読み込み, 配列にデータを格納
     with open(weights_path, "rb") as f:
         # skip header
         #f.read(20)
 
         weights = np.fromfile(f, dtype=np.float32)
 
-    ptr = 5        # 0~4 は, ヘッダのようなものが入っている
+    ptr = 5
 
     ptr = self.set_bn_params(self.conv1.bn, weights, ptr)
     ptr = self.set_conv_weights(self.conv1.conv, weights, ptr)

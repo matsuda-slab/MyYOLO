@@ -7,7 +7,9 @@ import numpy as np
 import time
 import utils.count_distribution as ditsrib
 
+#===============================================================================
 # YOLOv3-tiny
+#===============================================================================
 class YOLO_tiny(nn.Module):
     def __init__(self, num_classes, quant=False, dropout=False):
         super(YOLO_tiny, self).__init__()
@@ -99,8 +101,7 @@ class YOLO_tiny(nn.Module):
         self.pool4  = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool5  = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool6  = nn.MaxPool2d(kernel_size=2, stride=1, padding=0)
-        self.zeropad = nn.ZeroPad2d((0, 1, 0, 1)) # サイズを保つための
-                                                   # ゼロパディング (pool6の直前)
+        self.zeropad = nn.ZeroPad2d((0, 1, 0, 1))
         self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.yolo1    = YOLOLayer(self.anchors[1],
                             self.img_size, self.num_classes)
@@ -112,7 +113,7 @@ class YOLO_tiny(nn.Module):
 
         self.yolo_layers = [self.yolo1, self.yolo2]
 
-        # 量子化器
+        # Quantization
         self.enquant  = quant
         self.quant    = QuantStub()
         self.dequant  = DeQuantStub()
@@ -292,11 +293,11 @@ class YOLO_tiny(nn.Module):
         return ptr
     
     def load_darknet_weights(self, weights_path):
-        # バイナリファイルを読み込み, 配列にデータを格納
+        # Load binary file and store data into array
         with open(weights_path, "rb") as f:
             weights = np.fromfile(f, dtype=np.float32)
     
-        ptr = 5        # 0~4 は, ヘッダのようなものが入っている
+        ptr = 5        # 0~4 are something like header
     
         ptr = self.set_bn_params(self.conv1.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv1.conv, weights, ptr)
@@ -333,7 +334,9 @@ class YOLO_tiny(nn.Module):
         yolo_outputs = []
 
         #step1_t = time.time()
-        # 特徴抽出部
+        #===============================================================================
+        # Backborn
+        #===============================================================================
         if self.enquant: x = self.quant(x)
         x = self.conv1(x)
         if distri_array is not None: ditsrib.count(distri_array, x)
@@ -372,7 +375,7 @@ class YOLO_tiny(nn.Module):
         if debug: print("conv5 max :", torch.max(x))
         if debug: print("conv5 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
-        l8_output = x       # あとのconcat用に出力を保管
+        l8_output = x
         x = self.pool5(x)
         if self.en_dropout: x = self.dropout(x)
 
@@ -390,7 +393,10 @@ class YOLO_tiny(nn.Module):
         if self.en_dropout: x = self.dropout(x)
 
         #step2_t = time.time()
-        # スケール大 検出部
+
+        #===============================================================================
+        # Detect large scale things
+        #===============================================================================
         x = self.conv7(x)
         #if debug: print("conv7 output :", x)
         if debug: print("conv7 max :", torch.max(x))
@@ -424,13 +430,16 @@ class YOLO_tiny(nn.Module):
         yolo_outputs.append(x1)
 
         #step3_t = time.time()
-        # スケール中 検出部
+
+        #===============================================================================
+        # Detect middle scale things
+        #===============================================================================
         x2 = self.conv11(x2)
         if distri_array is not None: ditsrib.count(distri_array, x2)
         if self.en_dropout: x2 = self.dropout(x2)
 
         x2 = self.upsample(x2)
-        # チャネル数方向に特徴マップを結合
+        # Concat Fmaps in the channel direction
         x2 = torch.cat([x2, l8_output], dim=1)
 
         x2 = self.conv12(x2)
@@ -444,9 +453,6 @@ class YOLO_tiny(nn.Module):
         x2 = self.yolo2(x2)
         yolo_outputs.append(x2)
 
-        #print("yolo_outputs.shape :", yolo_outputs[0].shape)
-        #print("yolo_outputs.shape :", yolo_outputs[1].shape)
-        #print("torch.cat.shape :", torch.cat(yolo_outputs, 1).shape)
         #last_t = time.time()
 
         #if not self.training:
@@ -454,6 +460,9 @@ class YOLO_tiny(nn.Module):
         #            (step2_t - step1_t, step3_t - step2_t, last_t - step3_t))
         return yolo_outputs if self.training else torch.cat(yolo_outputs, 1)
 
+#===============================================================================
+# YOLOv3
+#===============================================================================
 class YOLO(nn.Module):
     def __init__(self, num_classes=80):
         super(YOLO, self).__init__()
@@ -502,8 +511,8 @@ class YOLO(nn.Module):
         self.res7  = ResBlock(256)
         self.res8  = ResBlock(256)
         self.res9  = ResBlock(256)
-        self.res10  = ResBlock(256)
-        self.res11  = ResBlock(256)
+        self.res10 = ResBlock(256)
+        self.res11 = ResBlock(256)
         self.conv5 = nn.Sequential(OrderedDict([
                             ('conv', nn.Conv2d(256, 512, kernel_size=3,
                                             stride=2, padding=1, bias=0)),
@@ -511,14 +520,14 @@ class YOLO(nn.Module):
                                             eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
-        self.res12  = ResBlock(512)
-        self.res13  = ResBlock(512)
-        self.res14  = ResBlock(512)
-        self.res15  = ResBlock(512)
-        self.res16  = ResBlock(512)
-        self.res17  = ResBlock(512)
-        self.res18  = ResBlock(512)
-        self.res19  = ResBlock(512)
+        self.res12 = ResBlock(512)
+        self.res13 = ResBlock(512)
+        self.res14 = ResBlock(512)
+        self.res15 = ResBlock(512)
+        self.res16 = ResBlock(512)
+        self.res17 = ResBlock(512)
+        self.res18 = ResBlock(512)
+        self.res19 = ResBlock(512)
         self.conv6 = nn.Sequential(OrderedDict([
                             ('conv', nn.Conv2d(512, 1024, kernel_size=3,
                                             stride=2, padding=1, bias=0)),
@@ -526,10 +535,10 @@ class YOLO(nn.Module):
                                             eps=1e-5)),
                             ('relu', nn.LeakyReLU(0.1))
                      ]))
-        self.res20  = ResBlock(1024)
-        self.res21  = ResBlock(1024)
-        self.res22  = ResBlock(1024)
-        self.res23  = ResBlock(1024)
+        self.res20 = ResBlock(1024)
+        self.res21 = ResBlock(1024)
+        self.res22 = ResBlock(1024)
+        self.res23 = ResBlock(1024)
 
         self.conv7 = nn.Sequential(OrderedDict([
                             ('conv', nn.Conv2d(1024, 512, kernel_size=1,
@@ -736,11 +745,11 @@ class YOLO(nn.Module):
         return ptr
     
     def load_darknet_weights(self, weights_path):
-        # バイナリファイルを読み込み, 配列にデータを格納
+        # Load binary file and store data into array
         with open(weights_path, "rb") as f:
             weights = np.fromfile(f, dtype=np.float32)
     
-        ptr = 5        # 0~4 は, ヘッダのようなものが入っている
+        ptr = 5        # 0~4 are something like header
     
         ptr = self.set_bn_params(self.conv1.bn, weights, ptr)
         ptr = self.set_conv_weights(self.conv1.conv, weights, ptr)
@@ -903,7 +912,9 @@ class YOLO(nn.Module):
     def forward(self, x):
         yolo_outputs = []
 
-        # backborn
+        #===============================================================================
+        # Backborn
+        #===============================================================================
         x = self.conv1(x)
 
         x = self.conv2(x)       # down sample (416 -> 208)
@@ -947,7 +958,6 @@ class YOLO(nn.Module):
         x1 = self.conv12(conv11_out)
         x1 = self.conv13(x1)
 
-        # YOLOレイヤ1
         x1 = self.yolo1(x1)
         yolo_outputs.append(x1)
         
@@ -966,7 +976,6 @@ class YOLO(nn.Module):
         x2 = self.conv20(conv19_out)
         x2 = self.conv21(x2)
 
-        # YOLOレイヤ2
         x2 = self.yolo2(x2)
         yolo_outputs.append(x2)
         
@@ -984,7 +993,6 @@ class YOLO(nn.Module):
         x = self.conv27(x)
         x = self.conv28(x)
         x = self.conv29(x)
-        # YOLOレイヤ2
         x3 = self.yolo3(x)
         yolo_outputs.append(x3)
 
@@ -992,6 +1000,9 @@ class YOLO(nn.Module):
             return yolo_outputs
         return torch.cat(yolo_outputs, 1)
 
+#===============================================================================
+# YOLOv3-tiny-improved (Separable Convolution)
+#===============================================================================
 class YOLO_sep(nn.Module):
     def __init__(self, num_classes, merge):
         super(YOLO_sep, self).__init__()
@@ -1006,22 +1017,20 @@ class YOLO_sep(nn.Module):
 
         # modules
         if self.merge:
-            # 1層目を separable にしても意外と精度落ちないので採用
             self.conv1  = nn.Sequential(OrderedDict([
                                ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
-                                   groups=3,   stride=1, padding=1, bias=1)),  # dw
+                                   groups=3,   stride=1, padding=1, bias=1)),
                                ('relu_dw', nn.LeakyReLU(0.1)),
                                ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
-                                   stride=1, padding=0, bias=1)),              # pw
+                                   stride=1, padding=0, bias=1)),
                                ('relu_pw', nn.LeakyReLU(0.1))
                                ]))
-            # 1層目のみ, 普通の3x3-conv
             #self.conv1  = nn.Sequential(OrderedDict([
-            #                    ('conv', nn.Conv2d(   3,   16, kernel_size=3,
-            #                        stride=1, padding=1, bias=0)),
-            #                    ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-            #                    ('relu', nn.LeakyReLU(0.1))
-            #                    ]))
+            #                   ('conv', nn.Conv2d(   3,   16, kernel_size=3,
+            #                       stride=1, padding=1, bias=0)),
+            #                   ('bn', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+            #                   ('relu', nn.LeakyReLU(0.1))
+            #                   ]))
             self.conv2  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d(  16,   16, kernel_size=3,
                                     groups=16,  stride=1, padding=1, bias=1)),
@@ -1101,18 +1110,16 @@ class YOLO_sep(nn.Module):
             self.conv13   = nn.Conv2d(256, self.ylch, kernel_size=1,
                                     stride=1, padding=0, bias=1)
         else:
-            # 1層目を separable にしても意外と精度落ちないので採用
             self.conv1  = nn.Sequential(OrderedDict([
                                ('conv_dw', nn.Conv2d(   3,    3, kernel_size=3,
                                    groups=3,   stride=1, padding=1, bias=0)),  # dw
-                               #('bn_dw', nn.BatchNorm2d(  3, momentum=0.1, eps=1e-5)),
-                               #('relu_dw', nn.LeakyReLU(0.1)),
+                               ('bn_dw', nn.BatchNorm2d(  3, momentum=0.1, eps=1e-5)),
+                               ('relu_dw', nn.LeakyReLU(0.1)),
                                ('conv_pw', nn.Conv2d(   3,   16, kernel_size=1,
                                    stride=1, padding=0, bias=0)),              # pw
                                ('bn_pw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
                                ('relu_pw', nn.LeakyReLU(0.1))
                                ]))
-            # 1層目のみ, 普通の3x3-conv
             #self.conv1  = nn.Sequential(OrderedDict([
             #                    ('conv', nn.Conv2d(   3,   16, kernel_size=3,
             #                        stride=1, padding=1, bias=0)),
@@ -1122,8 +1129,8 @@ class YOLO_sep(nn.Module):
             self.conv2  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d(  16,   16, kernel_size=3,
                                     groups=16,  stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d(  16, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d(  16,   32, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
@@ -1132,8 +1139,8 @@ class YOLO_sep(nn.Module):
             self.conv3  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d(  32,   32, kernel_size=3,
                                     groups=32,  stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d(  32, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d(  32,   64, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d(  64, momentum=0.1, eps=1e-5)),
@@ -1142,8 +1149,8 @@ class YOLO_sep(nn.Module):
             self.conv4  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d(  64,   64, kernel_size=3,
                                     groups=64,  stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d( 64, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d( 64, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d(  64,  128, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
@@ -1152,8 +1159,8 @@ class YOLO_sep(nn.Module):
             self.conv5  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d( 128,  128, kernel_size=3,
                                     groups=128, stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d( 128, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d( 128,  256, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
@@ -1162,8 +1169,8 @@ class YOLO_sep(nn.Module):
             self.conv6  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
                                     groups=256, stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
@@ -1172,8 +1179,8 @@ class YOLO_sep(nn.Module):
             self.conv7  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d( 512,  512, kernel_size=3,
                                     groups=512, stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d(512, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d( 512, 1024, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d(1024, momentum=0.1, eps=1e-5)),
@@ -1188,8 +1195,8 @@ class YOLO_sep(nn.Module):
             self.conv9  = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d( 256,  256, kernel_size=3,
                                     groups=256, stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d( 256,  512, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d( 512, momentum=0.1, eps=1e-5)),
@@ -1206,8 +1213,8 @@ class YOLO_sep(nn.Module):
             self.conv12 = nn.Sequential(OrderedDict([
                                 ('conv_dw', nn.Conv2d( 384,  384, kernel_size=3,
                                     groups=384, stride=1, padding=1, bias=0)),
-                                #('bn_dw', nn.BatchNorm2d( 384, momentum=0.1, eps=1e-5)),
-                                #('relu_dw', nn.LeakyReLU(0.1)),
+                                ('bn_dw', nn.BatchNorm2d( 384, momentum=0.1, eps=1e-5)),
+                                ('relu_dw', nn.LeakyReLU(0.1)),
                                 ('conv_pw', nn.Conv2d( 384,  256, kernel_size=1,
                                     stride=1, padding=0, bias=0)),
                                 ('bn_pw', nn.BatchNorm2d( 256, momentum=0.1, eps=1e-5)),
@@ -1221,8 +1228,9 @@ class YOLO_sep(nn.Module):
         self.pool4    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool5    = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.pool6    = nn.MaxPool2d(kernel_size=2, stride=1, padding=0)
+
+        # Zero padding to keep size (before pool6)
         self.zeropad  = nn.ZeroPad2d((0, 1, 0, 1))
-                                # サイズを保つためのゼロパディング (pool6の直前)
         self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
         self.yolo1    = YOLOLayer(self.anchors[1],
                             self.img_size, self.num_classes)
@@ -1235,8 +1243,10 @@ class YOLO_sep(nn.Module):
         yolo_outputs = []
 
         step1_t = time.time()
-        # 特徴抽出部
-        #if debug: print("input:", x[0][0][200])
+
+        #===============================================================================
+        # Backborn
+        #===============================================================================
         x = self.conv1(x)
         if debug: print("conv1 output :", x)
         #if debug: print("conv1 max :", torch.max(x))
@@ -1262,7 +1272,7 @@ class YOLO_sep(nn.Module):
         if debug: print("conv5 max :", torch.max(x))
         if debug: print("conv5 min :", torch.min(x))
         if distri_array is not None: ditsrib.count(distri_array, x)
-        l8_output = x       # あとのconcat用に出力を保管
+        l8_output = x       # save output for concat layer
         x = self.pool5(x)
         x = self.conv6(x)
         if debug: print("conv6 max :", torch.max(x))
@@ -1272,7 +1282,10 @@ class YOLO_sep(nn.Module):
         x = self.pool6(x)
 
         step2_t = time.time()
-        # スケール大 検出部
+
+        #===============================================================================
+        # Detect large scale things
+        #===============================================================================
         x = self.conv7(x)
         if debug: print("conv7 max :", torch.max(x))
         if debug: print("conv7 min :", torch.min(x))
@@ -1294,11 +1307,14 @@ class YOLO_sep(nn.Module):
         yolo_outputs.append(x1)
 
         step3_t = time.time()
-        # スケール中 検出部
+
+        #===============================================================================
+        # Detect middle scale things
+        #===============================================================================
         x2 = self.conv11(x2)
         if distri_array is not None: ditsrib.count(distri_array, x2)
         x2 = self.upsample(x2)
-        # チャネル数方向に特徴マップを結合
+        # Concat Fmaps in the channel direction
         x2 = torch.cat([x2, l8_output], dim=1)
         x2 = self.conv12(x2)
         if distri_array is not None: ditsrib.count(distri_array, x2)
@@ -1326,23 +1342,21 @@ class YOLOLayer(nn.Module):
         self.stride      = 0
 
     def forward(self, x):
-        # ストライドは, 画像サイズをグリッドの分割数で割った値.
-        # つまり, 1グリッドあたり何ピクセルか　を表す
+        # Stride is image size divided by grid partition number
+        # namely, how many pixels are in 1 grid
         self.stride = self.img_size // x.size(2)
         batch_size, _, height, width = x.shape
 
-        # (batch数, 255, H, W) -> (batch数, 3, 85, H, W)
-        #                      -> (batch数, 3, H, W, 85)
-        # 3 は アンカー数, 85 は x,y,w,h + クラス数
+        # (#batch, 255, H, W) -> (#batch, 3, 85, H, W)
+        #                      -> (#batch, 3, H, W, 85)
+        # 3 = #anchor, 85 = x,y,w,h + #class
         x = x.reshape(batch_size, self.num_anchors,
                             self.num_classes+5, width, height)
         x = x.permute(0, 1, 3, 4, 2)
 
-
-        # 推論のときは, ロジステック回帰をして, 座標値やconfidenceに変換して返す
-        # ... は, 次元省略
+        # Make logistic regression to transpose to coordinates and confidence
         if not self.training:
-            # ボックスの座標のオフセットテーブルを作成
+            # Create offset table of box coordinates
             grid_y, grid_x = torch.meshgrid(
                         torch.arange(height, device=x.device),
                         torch.arange(width, device=x.device)
@@ -1354,10 +1368,9 @@ class YOLOLayer(nn.Module):
             anchors = torch.tensor(self.anchors).float()
 
             # wh
-            # anchors は, [[10,14], [23,27], [37,58]] のようなリスト
-            # anchors_w, anchors_h を, かける対象のxのshape(1, 3, 13, 13, 1)
-            # に合わせる (xは [1, 3, 13, 13, 85] だが, インデックス2 を指定する
-            # ので, [1, 3, 13, 13, 1] になる
+            # anchors is a list, like [[10,14], [23,27], [37,58]]
+            # Match shape of anchors_w and anchors_h 
+            # to shape of x (1, 3, 13, 13, 1).
             anchors_w = torch.tensor([anc[0] for anc in anchors]).to(x.device)
             anchors_w = anchors_w.view(1, -1, 1, 1)
             anchors_h = torch.tensor([anc[1] for anc in anchors]).to(x.device)
@@ -1365,14 +1378,15 @@ class YOLOLayer(nn.Module):
             x[..., 2] = torch.exp(x[..., 2]) * anchors_w
             x[..., 3] = torch.exp(x[..., 3]) * anchors_h
 
-            # conf, class確率
+            # conf, class
             x[..., 4:] = x[..., 4:].sigmoid()
 
             x = x.reshape(batch_size, -1, self.num_classes+5)
 
-        # 学習のときは, xをそのまま返す. 推論のときは, 変換した値を返す
+        # Return as it is when training. Return transposed value when inferrence
         return x
 
+# Residual Block used for YOLOv3
 class ResBlock(nn.Module):
     def __init__(self, ch):
         super().__init__()
@@ -1424,7 +1438,7 @@ def load_model(weights_path, device, num_classes=80, merge=False, tiny=True,
               model.load_state_dict(torch.load(
                                         weights_path, map_location=device))
 
-          # 最終層を置き換え
+          # Replace last layer
           if not restart:
               ylch = (5 + num_classes) * 3
               model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1,
@@ -1437,7 +1451,7 @@ def load_model(weights_path, device, num_classes=80, merge=False, tiny=True,
                                     model.img_size, num_classes)
               model.yolo_layers = [model.yolo1, model.yolo2]
 
-          # 置き換えた層以外のパラメータをフリーズ
+          # Freeze parameters except for replaced layer's
           for (key, param) in model.named_parameters():
             if key in update_param_names:
               param.requires_grad = True
@@ -1462,7 +1476,7 @@ def load_model(weights_path, device, num_classes=80, merge=False, tiny=True,
                 #model.load_weights(weights_path, device)
                 weights = torch.load(weights_path, map_location=device)
                 model.load_state_dict(weights)
-            # 最終層を置き換え
+            # Replace last layer
             ylch = (5 + num_classes) * 3
             model.conv10.conv = nn.Conv2d(512, ylch, kernel_size=1,
                                     stride=1, padding=0, bias=1)
@@ -1477,13 +1491,13 @@ def load_model(weights_path, device, num_classes=80, merge=False, tiny=True,
             model.to(device)
           return model
 
-        else:           # 推論 or 一から学習
+        else:           # Inferrence or training from scratch
           model = (YOLO_sep(num_classes, merge).to(device)
                     if use_sep
                     else YOLO_tiny(num_classes, quant, dropout).to(device))
 
           if weights_path:
-            if quant and jit:               # 量子化モデルを使った推論
+            if quant and jit:
                 model = torch.jit.load(weights_path)
             elif weights_path.endswith('weights'):
                 model.load_darknet_weights(weights_path)

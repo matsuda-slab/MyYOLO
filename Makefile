@@ -1,7 +1,8 @@
 NUM_CLASSES	  = 80
 CLASS_FILE		= namefiles/coco.names
 CONF_THRES		= 0.01
-DETECT_OPTION = --num_classes $(NUM_CLASSES) --class_names $(CLASS_FILE) --conf_thres $(CONF_THRES)
+DETECT_OPTION = --num_classes $(NUM_CLASSES) --class_names $(CLASS_FILE) \
+								--conf_thres $(CONF_THRES)
 DETECT_IMAGE	= images/doll_light_1.png
 DETECT_VIDEO	= images/car.mp4
 WEIGHTS			  = weights/yolov3-tiny.pt

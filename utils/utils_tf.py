@@ -7,32 +7,10 @@ import cv2
 from torch.utils.data import Dataset
 #from pycocotools.coco import COCO
 
-"""
-# 推論結果と教師ラベルから, 損失計算
-def compute_loss(predictions, targets):
-    device = targets.device
 
-    # 各lossを入れるための箱を用意
-    loss_cls = torch.zeros(1, device=device)
-    loss_box = torch.zeros(1, device=device)
-    loss_obj = torch.zeros(1, device=device)
-
-    # ロスを算出する関数を用意
-    BCEcls = nn.BCEWithLogitsLoss(          # Binary Cross Entropy
-        pos_weight=torch.tensor([1.0], device=device))
-    BCEobj = nn.BCEWithLogitsLoss(
-        pos_weight=torch.tensor([1.0], device=device))
-
-    # バッチごとの処理
-    for batch in batch_size:
-
-    loss = loss_cls + loss_box + loss_obj
-
-    return loss
-"""
-
-
-""" from eriklindernoren """
+#===============================================================================
+# from eriklindernoren/PyTorch-YOLOv3
+#===============================================================================
 # from __future__ import division
 
 import os

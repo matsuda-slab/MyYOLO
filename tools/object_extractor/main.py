@@ -1,3 +1,7 @@
+#===============================================================================
+# Copyright (C) 2021 Masatomo Matsuda. All rights reserved.
+#===============================================================================
+
 # -*- coding: utf-8 -*-
 import os, sys
 import cv2
@@ -38,9 +42,9 @@ weights_path = '../weights/yolov3.weights'
 SAVE_DIR     = args.savedir
 conf_thres   = 0.5
 nms_thres    = 0.4
-mask_thres   = 150
-save_thres   = 20000
-INTERVAL     = 120                    # INTERVALフレームに1回抽出する
+mask_thres   = args.mask_thres
+save_thres   = args.save_thres
+INTERVAL     = args.interval        # extract per INTERVAL frames
 TARGET_CLASS = [1, 2, 3, 5, 7]      # car, bicycle, motorbike, bus, truck
 
 if args.video == None:
@@ -62,49 +66,49 @@ with open('../namefiles/coco.names', 'r') as f:
     class_names = f.read().splitlines()
 
 #colors = [(255, 20, 20), (255, 20, 255), (20, 137, 255), (20, 255, 137), (255, 255, 20)]
-cmap = plt.get_cmap('tab20')       # tab20b はカラーマップの種類の1つ
-colors = [cmap(i) for i in np.linspace(0, 1, 80)]  # cmap をリスト化 (80分割)
+cmap = plt.get_cmap('tab20')
+colors = [cmap(i) for i in np.linspace(0, 1, 80)]
 
-# グレスケ変換
+# Gray scale transform
 frame_pre = 0
 frame_pre2 = 0
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# モデル生成
+# Create model
 model = load_model(weights_path, device, tiny=False, num_classes=80)
 
 frame_cnt = 0
 image_cnt = 0
-for frame in cap:           # frame は RGB
+for frame in cap:           # frame is RGB
     detect_flag = 0
-    frame_cv = frame[:,:,[2,1,0]]       # opencv用に BGR に変換
+    frame_cv = frame[:,:,[2,1,0]]       # transform to BGR for opencv
     if frame_cnt % INTERVAL == 0:
         start_t = time.time()
-        frame_cv_input = frame_cv.copy()       # opencv用に BGR に変換
+        frame_cv_input = frame_cv.copy()
         orig_h, orig_w = frame.shape[0:2]
 
         ########################################################################
-        # 差分画像用意
+        # Prepare difference image
         ########################################################################
 
-        # グレスケ変換
+        # Gray scale transform
         gray = cv2.cvtColor(frame_cv, cv2.COLOR_BGR2GRAY)
 
-        # 2フレーム前との差分の絶対値を計算
+        # Calculate absolute value of difference between this frame and two previous frame
         diff = cv2.absdiff(gray, frame_pre2)
 
-        # 差分画像を2値化して, マスク画像を算出
+        # Binarize difference image to generate mask image
         diff[diff < mask_thres] = 0
         diff[mask_thres <= diff] = 255
 
         diff_back = np.zeros((orig_h, orig_w))
 
         ########################################################################
-        # YOLO を使って車両の写る画像を抽出
+        # Extract image including vehicle using YOLO
         ########################################################################
 
-        # YOLO用前処理
+        # Preprocess for YOLO
         image = transforms.ToTensor()(frame_cv_input)
         image = resize_aspect_ratio(image)
         image = torch.from_numpy(image)
@@ -154,7 +158,7 @@ for frame in cap:           # frame は RGB
                 cv2.rectangle(frame_cv_input, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=tuple(color), thickness=2)
                 cv2.putText(frame_cv_input, class_names[int(class_pred)], (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color=tuple(color), thickness=2)
 
-                # 車両を検出した部分だけ, 差分を有効にする
+                # Enable difference only in the area car detected
                 for i in range(int(y_min), int(y_max)):
                     for j in range(int(x_min), int(x_max)):
                         diff_back[i][j] = diff[i][j]
@@ -183,7 +187,7 @@ for frame in cap:           # frame は RGB
                     cv2.imwrite(image_path, frame_cv)
                     image_cnt = image_cnt + 1
 
-            # 現フレームを1つ前のフレームに設定
+            # Set this frame as previous frame
             frame_pre2 = frame_pre
             frame_pre = gray
 

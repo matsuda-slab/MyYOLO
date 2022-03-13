@@ -1,3 +1,7 @@
+#===============================================================================
+# Training script
+#===============================================================================
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,6 +17,9 @@ import numpy as np
 from utils.utils import (non_max_suppression, xywh2xyxy,
                          get_batch_statistics, ap_per_class)
 
+#===============================================================================
+# Process arguments
+#===============================================================================
 parser = argparse.ArgumentParser()
 parser.add_argument('--weights')
 parser.add_argument('--model', default=None)
@@ -20,7 +27,7 @@ parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--lr', type=float, default=0.0001)
 parser.add_argument('--decay', type=float, default=0.0005)
-parser.add_argument('--data_root', default='/home/matsuda/datasets/COCO/2014')
+parser.add_argument('--data_root', default=os.environ['HOME'] + '/datasets/COCO/2014')
 parser.add_argument('--output_model', default='yolo-tiny.pt')
 parser.add_argument('--num_classes', type=int, default=80)
 parser.add_argument('--trans', action='store_true', default=False)
@@ -28,13 +35,16 @@ parser.add_argument('--finetune', action='store_true', default=False)
 parser.add_argument('--valid_iou_thres', type=float, default=0.5)
 parser.add_argument('--valid_nms_thres', type=float, default=0.5)
 parser.add_argument('--valid_conf_thres', type=float, default=0.1)
-parser.add_argument('--no_valid', action='store_true', default=False)
-parser.add_argument('--class_names', default='coco.names')
+parser.add_argument('--novalid', action='store_true', default=False)
+parser.add_argument('--class_names', default='namefiles/coco.names')
 parser.add_argument('--nosave', action='store_true', default=False)
 parser.add_argument('--restart', action='store_true', default=False)
 parser.add_argument('--dropout', action='store_true', default=False)
 args = parser.parse_args()
 
+#===============================================================================
+# Define parameters
+#===============================================================================
 DATA_ROOT    = args.data_root
 BATCH_SIZE   = args.batch_size
 EPOCHS       = args.epochs
@@ -52,8 +62,8 @@ lr_steps     = [[400000, 0.1], [450000, 0.1]]
 weights_path = args.weights
 NUM_CLASSES  = args.num_classes
 IMG_SIZE     = 416
-TRANS        = args.trans   # 転移学習
-FINETUNE     = args.finetune   # ファインチューニング
+TRANS        = args.trans           # Transfer learning
+FINETUNE     = args.finetune        # Fine tuning
 SEP          = True if args.model == "sep" else False
 restart      = args.restart
 dropout      = args.dropout
@@ -67,6 +77,7 @@ tensor_type = (torch.cuda.FloatTensor
                     if torch.cuda.is_available()
                     else torch.FloatTensor)
 
+# Load class names from name file
 class_file = args.class_names
 class_names = []
 with open(class_file, 'r') as f:
@@ -86,7 +97,7 @@ validation_dataloader = _create_validation_data_loader(
     IMG_SIZE
     )
 
-# モデルの生成
+# Create model
 if TRANS:
     model, param_to_update  = load_model(weights_path, device, NUM_CLASSES,
                                          trans=TRANS, restart=restart,
@@ -96,7 +107,7 @@ else:
     model = load_model(weights_path, device, NUM_CLASSES, tiny=True, trans=TRANS,
                        finetune=FINETUNE, use_sep=SEP, dropout=dropout)
 
-# 最適化アルゴリズム, 損失関数の定義
+# Define training algorithm and loss function
 if TRANS:
     optimizer = optim.Adam(param_to_update, lr=LR, weight_decay=DECAY)
 else:
@@ -104,14 +115,13 @@ else:
 
 print("Model :", model.__class__.__name__);
 
-# lossのグラフ用リスト
+# Lists for loss graphs
 losses  = []
 mAPs    = []
 max_map = 0
 lrs     = []
 lr      = LR
 
-# 学習ループ
 print("Start Training\n")
 start = time.ctime()
 start_cnv = time.strptime(start)
@@ -120,6 +130,9 @@ lr = LR
 
 print(model)
 
+#===============================================================================
+# Training loop
+#===============================================================================
 for epoch in range(EPOCHS):
     model.train()
     for ite, (_, image, target) in enumerate(dataloader):
@@ -128,16 +141,16 @@ for epoch in range(EPOCHS):
         image = image.to(device)
         target = target.to(device)
 
-        # forward
+        # Forward
         outputs = model(image)
 
-        # 損失の計算
+        # Calculate loss
         loss, _ = compute_loss(outputs, target, model)
 
-        # backward
+        # Backward
         loss.backward()
 
-        # 学習率の調整 及び optimizerの実行
+        # Adjust learning rate and run optimizer
         if batches_done % SUBDIVISION == 0:
             lr = LR
             if batches_done < BURN_IN:
@@ -150,7 +163,6 @@ for epoch in range(EPOCHS):
             for g in optimizer.param_groups:
                 g['lr'] = lr
 
-            # optimizer を動作させる
             optimizer.step()
 
             optimizer.zero_grad()
@@ -165,14 +177,14 @@ for epoch in range(EPOCHS):
                 % (epoch, EPOCHS, ite, len(dataloader), loss), end="")
 
     #=======================================================================
-    #if epoch % 10 == 9:      # 10 epoch に 1回 学習率を0.1倍する
+    #if epoch % 10 == 9:
     #    lr = lr * 0.1
     #    for g in optimizer.param_groups:
     #        g['lr'] = lr
     #=======================================================================
 
-    # validationデータでの検証
-    if not args.no_valid:
+    # Validate on validation dataset
+    if not args.novalid:
         sample_metrics = []
         labels         = []
         model.eval()
@@ -194,7 +206,7 @@ for epoch in range(EPOCHS):
                     = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
         metrics_output = ap_per_class(TP, pred_scores, pred_labels, labels)
 
-        # APの算出
+        # Calculate AP
         precision, recall, AP, f1, ap_class = metrics_output
 
         if NUM_CLASSES != 1:
@@ -217,9 +229,13 @@ end_cnv = time.strptime(end)
 
 print("Start date >", time.strftime("%Y/%m/%d %H:%M:%S", start_cnv))
 print("End date >", time.strftime("%Y/%m/%d %H:%M:%S", end_cnv))
+# End training
 
-# 学習結果のパラメータやログの保存場所の準備
+#===============================================================================
+# Save training result
+#===============================================================================
 if not args.nosave:
+    # Prepare save location for training result and log
     result_dir = time.strftime("%Y%m%d_%H%M%S", start_cnv)
     result_path = os.path.join('results', result_dir) 
     os.makedirs(result_path)
@@ -246,10 +262,10 @@ if not args.nosave:
         f.write("dropout :" + str(dropout) + "\n")
         f.write("\n")
 
-# 学習結果(重みパラメータ)の保存
+    # Save model
     torch.save(model.state_dict(), os.path.join(result_path, args.output_model))
 
-# lossグラフの作成
+    # Create loss graph
     plot_graph(losses, EPOCHS, result_path + '/loss.png')
     plot_graph(mAPs, EPOCHS, result_path + '/mAP.png', label="mAP")
     plot_graph(lrs, EPOCHS, result_path + '/lr.png', label="learning rate")

@@ -54,7 +54,7 @@ class MyDataset(Dataset):
             # to RGB
             img = img[:, :, (2, 1, 0)]
 
-            # hstack : 配列を結合する
+            # hstack : concat arrays
             target = np.hstack((boxes, np.expand_dims(labels, axis-1)))
 
         return torch.from_numpy(img).permute(2, 0, 1), target
@@ -66,7 +66,10 @@ def resize(image, size):
     image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
     return image
 
-""" Dataset (from eriklindernoren) """
+
+#===============================================================================
+# from eriklindernoren/PyTorch-YOLOv3
+#===============================================================================
 class ListDataset(Dataset):
     def __init__(self, list_path, img_size=416, multiscale=True, transform=None):
         with open(list_path, "r") as file:
@@ -161,7 +164,6 @@ class ListDataset(Dataset):
     def __len__(self):
         return len(self.img_files)
 
-""" dataloader (from eriklindernoren) """
 def _create_data_loader(img_path, batch_size, img_size, n_cpu=8, multiscale_training=False):
     """Creates a DataLoader for training.
 
@@ -218,3 +220,4 @@ def _create_validation_data_loader(img_path, batch_size, img_size, n_cpu=8):
         pin_memory=True,
         collate_fn=dataset.collate_fn)
     return dataloader
+#===============================================================================

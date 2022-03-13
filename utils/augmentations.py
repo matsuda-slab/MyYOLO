@@ -1,3 +1,7 @@
+"""
+from eriklindernoren/PyTorch-YOLOv3
+"""
+
 import imgaug.augmenters as iaa
 from utils.transforms import ToTensor, PadSquare, RelativeLabels, AbsoluteLabels, ImgAug
 from torchvision import transforms

@@ -4,12 +4,11 @@ import numpy as np
 def count(array, param):
     """
     param : torch tensor
-    array : 要素10の配列
+    array : array of 10 elements
 
-    param のパラメータの値を見て, その階級別に, 階級値をarrayに入れる
-    (0~1 のパラメータの数が array[1] に入り, 1~2 のパラメータの数が array[2]
-    に入り...)
-    array[0] には, パラメータ数の合計が入る
+    Checking value of param, putting the class value into array
+    (ex. put the num of parameters which are in [0,1] into array[1]).
+    array[0] has sum of num of parameters
     """
 
     array[0] = array[0] + param.numel()
@@ -74,7 +73,7 @@ def count(array, param):
 def count_np(array, param):
     """
     param : ndarray
-    array : 要素10の配列
+    array : array of 10 elements
 
     numpy version
     """

@@ -1,10 +1,10 @@
 #===============================================================================
-# PyTorch モデルを onnx モデルに変換する
+# Convert PyTorch model to onnx model
 #
 # [ Usage ]
-#   python --weights {ptファイル}
+#   python --weights {*.pt}
 #   or
-#   python --weights {ptファイル] --model sep
+#   python --weights {*.pt] --model sep
 #===============================================================================
 
 import sys
@@ -25,7 +25,7 @@ def torch2onnx(model, output_path, input_shape):
             output_path,
             opset_version=11,
             do_constant_folding=False,
-            export_params=True,     # 学習したパラメータを格納する
+            export_params=True,
             verbose=True
     )
 

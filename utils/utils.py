@@ -30,8 +30,8 @@ def plot_graph(loss, rng, output_path, label="loss"):
 def plot_distrib(array, savedir, graph_name="activation_distribution"):
     array_percent = np.zeros(9)
     for i in range(9):
-        #array_percent[i] = np.round((array[i+1] / array[0]) * 10000) / 100.0  # 小数点2桁
-        array_percent[i] = np.round((array[i+1] / array[0]) * 100000) / 1000.0 # 小数点3桁
+        #array_percent[i] = np.round((array[i+1] / array[0]) * 10000) / 100.0  # 2 decimal places
+        array_percent[i] = np.round((array[i+1] / array[0]) * 100000) / 1000.0 # 3 decimal places
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
     label = ["[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)","[16,32)","[32,64)","[64,128)","[128,"]
@@ -50,32 +50,9 @@ def plot_distrib(array, savedir, graph_name="activation_distribution"):
     fig.savefig(savepath)
 
 
-"""
-# 推論結果と教師ラベルから, 損失計算
-def compute_loss(predictions, targets):
-    device = targets.device
-
-    # 各lossを入れるための箱を用意
-    loss_cls = torch.zeros(1, device=device)
-    loss_box = torch.zeros(1, device=device)
-    loss_obj = torch.zeros(1, device=device)
-
-    # ロスを算出する関数を用意
-    BCEcls = nn.BCEWithLogitsLoss(          # Binary Cross Entropy
-        pos_weight=torch.tensor([1.0], device=device))
-    BCEobj = nn.BCEWithLogitsLoss(
-        pos_weight=torch.tensor([1.0], device=device))
-
-    # バッチごとの処理
-    for batch in batch_size:
-
-    loss = loss_cls + loss_box + loss_obj
-
-    return loss
-"""
-
-
-""" from eriklindernoren """
+#===============================================================================
+# from eriklindernoren/PyTorch-YOLOv3
+#===============================================================================
 # from __future__ import division
 
 import os
@@ -461,3 +438,4 @@ def print_environment_info():
         print(f"Current Commit Hash: {subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()}")
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("No git or repo found")
+#===============================================================================

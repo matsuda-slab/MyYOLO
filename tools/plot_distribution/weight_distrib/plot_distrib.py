@@ -1,7 +1,7 @@
-"""
-パラメータの値の範囲のカウントをファイルに出力する.
-同時に, パラメータのすべての値を, レイヤごとにファイルに出力する
-"""
+#===============================================================================
+# Output the num of parameters which are in each range to file.
+# This also output all of parameter values to file per layer.
+#===============================================================================
 
 import os, sys
 import torch
