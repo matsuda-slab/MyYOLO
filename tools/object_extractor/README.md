@@ -10,9 +10,9 @@ This system extract an image according to the algorythm below.
 5. Repeat from 1 to 4 until the end of movie.
 
 ## Usage
-'''
+```
 python main.py {path to source video}
-'''
+```
 
 ### Option (Arbitral)
 - savedir {val} : path to the directory to save image (default : ./images) 
